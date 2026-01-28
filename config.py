@@ -8,14 +8,28 @@ para birimi ayarlarını ve veritabanı yolunu içerir.
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict
+import sys
+import os
 
 
 # =============================================================================
 # VERİTABANI AYARLARI
 # =============================================================================
 
-# Veritabanı dosyasının yolu
-DATABASE_PATH: Path = Path(__file__).parent / "data" / "finance.db"
+def get_database_path() -> Path:
+    """PyInstaller ve geliştirme modunda çalışan veritabanı yolu."""
+    # PyInstaller bundle içinde mi?
+    if getattr(sys, 'frozen', False):
+        # Kullanıcı belgeler klasörüne kaydet
+        app_data = Path.home() / ".moneyhandler"
+    else:
+        # Geliştirme modu - proje dizini
+        app_data = Path(__file__).parent / "data"
+    
+    app_data.mkdir(parents=True, exist_ok=True)
+    return app_data / "finance.db"
+
+DATABASE_PATH: Path = get_database_path()
 
 
 # =============================================================================
