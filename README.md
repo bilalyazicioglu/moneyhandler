@@ -23,3 +23,7 @@ python main.py
 - Python 3
 - PyQt6
 - SQLite
+
+## Lisans
+
+MIT
