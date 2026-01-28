@@ -11,15 +11,15 @@
 
 ---
 
-## ✨ Özellikler
+## Özellikler
 
-- 💰 **Çoklu Para Birimi** - TRY, USD, EUR desteği
-- 🏦 **Hesap Yönetimi** - Banka, nakit, kredi kartı hesapları
-- 📊 **Gelir/Gider Takibi** - Kategorili işlem kaydı
-- 📅 **Planlanan İşlemler** - Gelecek ödemeleri takip edin
-- ✏️ **Inline Düzenleme** - Split-pane detay paneli ile hızlı düzenleme
+- **Çoklu Para Birimi** - TRY, USD, EUR desteği
+- **Hesap Yönetimi** - Banka, nakit, kredi kartı hesapları
+- **Gelir/Gider Takibi** - Kategorili işlem kaydı
+- **Planlanan İşlemler** - Gelecek ödemeleri takip edin
+- **Inline Düzenleme** - Split-pane detay paneli ile hızlı düzenleme
 
-## 🚀 Kurulum
+## Kurulum
 
 ### Geliştirme
 ```bash
@@ -38,7 +38,7 @@ pyinstaller build.spec --clean --noconfirm
 ```
 Çıktı: `dist/MoneyHandler.app` (macOS) veya `dist/MoneyHandler.exe` (Windows)
 
-## 🛠 Teknoloji
+## Teknoloji
 
 | Teknoloji | Kullanım |
 |-----------|----------|
@@ -47,7 +47,7 @@ pyinstaller build.spec --clean --noconfirm
 | SQLite | Veritabanı |
 | PyInstaller | Executable Build |
 
-## 📁 Proje Yapısı
+## Proje Yapısı
 
 ```
 moneyhandler/
@@ -61,6 +61,6 @@ moneyhandler/
 └── build.spec           # PyInstaller yapılandırması
 ```
 
-## 📄 Lisans
+## Lisans
 
 MIT License - Detaylar için [LICENSE](LICENSE) dosyasına bakın.
