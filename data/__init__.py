@@ -1,0 +1,1 @@
+"""Data paketi - Veritabanı işlemleri."""
