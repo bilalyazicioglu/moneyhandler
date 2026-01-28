@@ -41,11 +41,10 @@ CURRENCIES: Dict[str, Currency] = {
 BASE_CURRENCY: str = "TRY"
 
 # Döviz kurları (1 birim -> TRY)
-# NOT: Gerçek uygulamada bu değerler API'den çekilebilir
 EXCHANGE_RATES: Dict[str, float] = {
     "TRY": 1.0,
-    "USD": 35.50,  # 1 USD = 35.50 TRY
-    "EUR": 38.20,  # 1 EUR = 38.20 TRY
+    "USD": 43.50,  
+    "EUR": 51.70, 
 }
 
 

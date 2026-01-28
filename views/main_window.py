@@ -8,11 +8,13 @@ Tüm view'ları bir arada tutar ve navigasyonu yönetir.
 from typing import TYPE_CHECKING
 
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QIcon, QPixmap
 from PyQt6.QtWidgets import (
     QMainWindow,
     QTabWidget,
     QWidget,
     QVBoxLayout,
+    QHBoxLayout,
     QLabel,
     QStatusBar
 )
@@ -27,6 +29,17 @@ from views.dashboard_view import DashboardView
 from views.accounts_view import AccountsView
 from views.transactions_view import TransactionsView
 from views.planned_items_view import PlannedItemsView
+
+import sys
+import os
+
+def resource_path(relative_path: str) -> str:
+    """PyInstaller için kaynak dosya yolunu döndürür."""
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base_path, relative_path)
 
 if TYPE_CHECKING:
     from controllers.main_controller import MainController
@@ -56,22 +69,52 @@ class MainWindow(QMainWindow):
     
     def _setup_window(self) -> None:
         """Pencere ayarlarını yapılandırır."""
-        self.setWindowTitle("Kişisel Finans Yönetimi")
+        self.setWindowTitle("MoneyHandler - Kişisel Finans Yönetimi")
         self.setMinimumSize(WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT)
         self.resize(1200, 800)
         
-        # Stil uygula
+        # Pencere ikonu
+        icon_path = resource_path("assets/icon.ico")
+        if os.path.exists(icon_path):
+            self.setWindowIcon(QIcon(icon_path))
+        
         self.setStyleSheet(get_stylesheet())
     
     def _setup_ui(self) -> None:
         """UI bileşenlerini oluşturur."""
-        # Merkezi widget
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         
         layout = QVBoxLayout(central_widget)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
+        
+        # Header with logo
+        header = QWidget()
+        header.setStyleSheet(f"background-color: {COLORS.BG_CARD}; border-bottom: 1px solid {COLORS.BORDER};")
+        header_layout = QHBoxLayout(header)
+        header_layout.setContentsMargins(20, 12, 20, 12)
+        
+        # Logo
+        logo_label = QLabel()
+        logo_path = resource_path("assets/logo.png")
+        if os.path.exists(logo_path):
+            pixmap = QPixmap(logo_path)
+            logo_label.setPixmap(pixmap.scaled(36, 36, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+        header_layout.addWidget(logo_label)
+        
+        # App name
+        app_name = QLabel("MoneyHandler")
+        app_name.setStyleSheet(f"""
+            font-size: 20px;
+            font-weight: 700;
+            color: {COLORS.TEXT_PRIMARY};
+            margin-left: 12px;
+        """)
+        header_layout.addWidget(app_name)
+        header_layout.addStretch()
+        
+        layout.addWidget(header)
         
         # Sekme widget'ı
         self.tab_widget = QTabWidget()

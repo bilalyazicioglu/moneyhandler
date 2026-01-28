@@ -17,7 +17,12 @@ from PyQt6.QtWidgets import (
     QTableWidget,
     QTableWidgetItem,
     QHeaderView,
-    QMessageBox
+    QMessageBox,
+    QSplitter,
+    QFrame,
+    QLineEdit,
+    QComboBox,
+    QDoubleSpinBox
 )
 from PyQt6.QtGui import QColor
 
@@ -49,6 +54,7 @@ class AccountsView(QWidget):
         """
         super().__init__(parent)
         self.controller = controller
+        self._selected_account = None
         self._setup_ui()
     
     def _setup_ui(self) -> None:
@@ -97,37 +103,224 @@ class AccountsView(QWidget):
         
         layout.addLayout(header_layout)
         
-        # Hesap tablosu
+        # Splitter: Tablo + Detay paneli
+        splitter = QSplitter(Qt.Orientation.Horizontal)
+        splitter.setStyleSheet("QSplitter::handle { background-color: transparent; }")
+        
+        # Sol: Hesap tablosu
         self.table = QTableWidget()
-        self.table.setColumnCount(6)
+        self.table.setColumnCount(5)
         self.table.setHorizontalHeaderLabels([
-            "ID", "Hesap Adı", "Tip", "Para Birimi", "Bakiye", "İşlemler"
+            "ID", "Hesap Adı", "Tip", "Para Birimi", "Bakiye"
         ])
         
-        # Sütun genişlikleri
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)
         header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         header.setSectionResizeMode(2, QHeaderView.ResizeMode.Fixed)
         header.setSectionResizeMode(3, QHeaderView.ResizeMode.Fixed)
         header.setSectionResizeMode(4, QHeaderView.ResizeMode.Fixed)
-        header.setSectionResizeMode(5, QHeaderView.ResizeMode.Fixed)
         
         self.table.setColumnWidth(0, 50)
         self.table.setColumnWidth(2, 100)
         self.table.setColumnWidth(3, 120)
         self.table.setColumnWidth(4, 160)
-        self.table.setColumnWidth(5, 160)
         
-        # ID sütununu gizle
         self.table.setColumnHidden(0, True)
-        
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.table.verticalHeader().setVisible(False)
         self.table.setShowGrid(False)
+        self.table.itemSelectionChanged.connect(self._on_selection_changed)
         
-        layout.addWidget(self.table)
+        splitter.addWidget(self.table)
+        
+        # Sağ: Detay paneli
+        self.detail_panel = self._create_detail_panel()
+        splitter.addWidget(self.detail_panel)
+        
+        splitter.setSizes([600, 300])
+        layout.addWidget(splitter)
+    
+    def _create_detail_panel(self) -> QFrame:
+        """Detay panelini oluşturur."""
+        panel = QFrame()
+        panel.setStyleSheet(f"""
+            QFrame {{
+                background-color: {COLORS.BG_CARD};
+                border: 1px solid {COLORS.BORDER};
+                border-radius: 12px;
+            }}
+        """)
+        
+        layout = QVBoxLayout(panel)
+        layout.setSpacing(16)
+        layout.setContentsMargins(20, 20, 20, 20)
+        
+        # Başlık
+        self.detail_title = QLabel("Hesap Detayları")
+        self.detail_title.setStyleSheet(f"""
+            font-size: 18px;
+            font-weight: 600;
+            color: {COLORS.TEXT_PRIMARY};
+            border: none;
+        """)
+        layout.addWidget(self.detail_title)
+        
+        # Hesap Adı
+        name_label = QLabel("Hesap Adı")
+        name_label.setStyleSheet(f"color: {COLORS.TEXT_SECONDARY}; font-size: 12px; border: none;")
+        layout.addWidget(name_label)
+        
+        self.detail_name = QLineEdit()
+        self.detail_name.setPlaceholderText("Hesap adı girin...")
+        layout.addWidget(self.detail_name)
+        
+        # Hesap Tipi
+        type_label = QLabel("Hesap Tipi")
+        type_label.setStyleSheet(f"color: {COLORS.TEXT_SECONDARY}; font-size: 12px; border: none;")
+        layout.addWidget(type_label)
+        
+        self.detail_type = QComboBox()
+        self.detail_type.addItem("Nakit", "cash")
+        self.detail_type.addItem("Banka", "bank")
+        layout.addWidget(self.detail_type)
+        
+        # Para Birimi
+        currency_label = QLabel("Para Birimi")
+        currency_label.setStyleSheet(f"color: {COLORS.TEXT_SECONDARY}; font-size: 12px; border: none;")
+        layout.addWidget(currency_label)
+        
+        self.detail_currency = QComboBox()
+        for code, currency in CURRENCIES.items():
+            self.detail_currency.addItem(f"{currency.symbol} {currency.name}", code)
+        layout.addWidget(self.detail_currency)
+        
+        # Bakiye (sadece görüntüleme)
+        balance_label = QLabel("Bakiye")
+        balance_label.setStyleSheet(f"color: {COLORS.TEXT_SECONDARY}; font-size: 12px; border: none;")
+        layout.addWidget(balance_label)
+        
+        self.detail_balance = QLabel("₺0.00")
+        self.detail_balance.setStyleSheet(f"""
+            font-size: 24px;
+            font-weight: 700;
+            color: {COLORS.SUCCESS};
+            border: none;
+        """)
+        layout.addWidget(self.detail_balance)
+        
+        layout.addStretch()
+        
+        # Butonlar
+        btn_layout = QHBoxLayout()
+        
+        self.save_btn = QPushButton("Kaydet")
+        self.save_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {COLORS.PRIMARY};
+                padding: 10px 20px;
+            }}
+            QPushButton:hover {{
+                background-color: {COLORS.PRIMARY_HOVER};
+            }}
+        """)
+        self.save_btn.clicked.connect(self._on_save_detail)
+        btn_layout.addWidget(self.save_btn)
+        
+        self.delete_btn = QPushButton("Sil")
+        self.delete_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {COLORS.DANGER};
+                padding: 10px 20px;
+            }}
+            QPushButton:hover {{
+                background-color: {COLORS.DANGER_LIGHT};
+            }}
+        """)
+        self.delete_btn.clicked.connect(self._on_delete_selected)
+        btn_layout.addWidget(self.delete_btn)
+        
+        layout.addLayout(btn_layout)
+        
+        # Başlangıçta devre dışı
+        self._set_detail_enabled(False)
+        
+        return panel
+    
+    def _set_detail_enabled(self, enabled: bool) -> None:
+        """Detay panelini etkinleştirir/devre dışı bırakır."""
+        self.detail_name.setEnabled(enabled)
+        self.detail_type.setEnabled(enabled)
+        self.detail_currency.setEnabled(enabled)
+        self.save_btn.setEnabled(enabled)
+        self.delete_btn.setEnabled(enabled)
+        
+        if not enabled:
+            self.detail_name.clear()
+            self.detail_balance.setText("₺0.00")
+            self.detail_title.setText("Hesap Detayları")
+    
+    def _on_selection_changed(self) -> None:
+        """Tablo seçimi değiştiğinde çağrılır."""
+        selected_rows = self.table.selectionModel().selectedRows()
+        if not selected_rows:
+            self._selected_account = None
+            self._set_detail_enabled(False)
+            return
+        
+        row = selected_rows[0].row()
+        account_id = int(self.table.item(row, 0).text())
+        self._selected_account = self.controller.get_account_by_id(account_id)
+        
+        if self._selected_account:
+            self._load_detail(self._selected_account)
+            self._set_detail_enabled(True)
+    
+    def _load_detail(self, account: Account) -> None:
+        """Hesap detaylarını panele yükler."""
+        self.detail_title.setText(f"{account.name}")
+        self.detail_name.setText(account.name)
+        
+        type_index = self.detail_type.findData(account.account_type)
+        if type_index >= 0:
+            self.detail_type.setCurrentIndex(type_index)
+        
+        currency_index = self.detail_currency.findData(account.currency)
+        if currency_index >= 0:
+            self.detail_currency.setCurrentIndex(currency_index)
+        
+        currency = CURRENCIES.get(account.currency)
+        symbol = currency.symbol if currency else ""
+        self.detail_balance.setText(f"{symbol}{account.balance:,.2f}")
+        
+        if account.balance >= 0:
+            self.detail_balance.setStyleSheet(f"font-size: 24px; font-weight: 700; color: {COLORS.SUCCESS}; border: none;")
+        else:
+            self.detail_balance.setStyleSheet(f"font-size: 24px; font-weight: 700; color: {COLORS.DANGER}; border: none;")
+    
+    def _on_save_detail(self) -> None:
+        """Detay panelinden hesabı kaydeder."""
+        if not self._selected_account:
+            return
+        
+        name = self.detail_name.text().strip()
+        if not name:
+            QMessageBox.warning(self, "Uyarı", "Hesap adı boş olamaz!")
+            return
+        
+        self._selected_account.name = name
+        self._selected_account.account_type = self.detail_type.currentData()
+        self._selected_account.currency = self.detail_currency.currentData()
+        
+        self.controller.update_account(self._selected_account)
+        self.refresh()
+        self.account_changed.emit()
+    
+    def _on_delete_selected(self) -> None:
+        """Seçili hesabı siler."""
+        if self._selected_account:
+            self._on_delete_account(self._selected_account)
     
     def refresh(self) -> None:
         """Hesap listesini yeniler."""
@@ -136,23 +329,18 @@ class AccountsView(QWidget):
         self.table.setRowCount(len(accounts))
         
         for row, account in enumerate(accounts):
-            # ID (gizli)
             id_item = QTableWidgetItem(str(account.id))
             self.table.setItem(row, 0, id_item)
             
-            # Hesap Adı
             self.table.setItem(row, 1, QTableWidgetItem(account.name))
             
-            # Tip
             type_text = "Nakit" if account.account_type == "cash" else "Banka"
             self.table.setItem(row, 2, QTableWidgetItem(type_text))
             
-            # Para Birimi
             currency = CURRENCIES.get(account.currency)
             currency_text = f"{currency.symbol} {currency.code}" if currency else account.currency
             self.table.setItem(row, 3, QTableWidgetItem(currency_text))
             
-            # Bakiye
             symbol = currency.symbol if currency else ""
             balance_text = f"{symbol}{account.balance:,.2f}"
             balance_item = QTableWidgetItem(balance_text)
@@ -161,62 +349,6 @@ class AccountsView(QWidget):
             else:
                 balance_item.setForeground(QColor(COLORS.DANGER))
             self.table.setItem(row, 4, balance_item)
-            
-            # İşlem butonları
-            self._add_action_buttons(row, account)
-    
-    def _add_action_buttons(self, row: int, account: Account) -> None:
-        """
-        Satıra işlem butonlarını ekler.
-        
-        Args:
-            row: Satır indeksi
-            account: Hesap nesnesi
-        """
-        button_widget = QWidget()
-        button_widget.setStyleSheet("background-color: transparent;")
-        button_layout = QHBoxLayout(button_widget)
-        button_layout.setContentsMargins(8, 4, 8, 4)
-        button_layout.setSpacing(8)
-        
-        # Düzenle butonu
-        edit_btn = QPushButton("Düzenle")
-        edit_btn.setFixedHeight(32)
-        edit_btn.setStyleSheet(f"""
-            QPushButton {{
-                background-color: {COLORS.BG_ELEVATED};
-                border: 1px solid {COLORS.BORDER};
-                padding: 6px 12px;
-                font-size: 12px;
-            }}
-            QPushButton:hover {{
-                background-color: {COLORS.BG_INPUT};
-                border-color: {COLORS.BORDER_LIGHT};
-            }}
-        """)
-        edit_btn.clicked.connect(lambda: self._on_edit_account(account))
-        button_layout.addWidget(edit_btn)
-        
-        # Sil butonu
-        delete_btn = QPushButton("Sil")
-        delete_btn.setFixedHeight(32)
-        delete_btn.setStyleSheet(f"""
-            QPushButton {{
-                background-color: transparent;
-                border: 1px solid {COLORS.DANGER};
-                color: {COLORS.DANGER};
-                padding: 6px 12px;
-                font-size: 12px;
-            }}
-            QPushButton:hover {{
-                background-color: {COLORS.DANGER};
-                color: {COLORS.TEXT_PRIMARY};
-            }}
-        """)
-        delete_btn.clicked.connect(lambda: self._on_delete_account(account))
-        button_layout.addWidget(delete_btn)
-        
-        self.table.setCellWidget(row, 5, button_widget)
     
     def _on_add_account(self) -> None:
         """Yeni hesap ekleme."""

@@ -17,9 +17,16 @@ from PyQt6.QtWidgets import (
     QTableWidget,
     QTableWidgetItem,
     QHeaderView,
-    QMessageBox
+    QMessageBox,
+    QSplitter,
+    QFrame,
+    QLineEdit,
+    QComboBox,
+    QDoubleSpinBox,
+    QDateEdit
 )
 from PyQt6.QtGui import QColor
+from PyQt6.QtCore import QDate
 
 from config import COLORS, CURRENCIES
 from models.planned_item import PlannedItem
@@ -51,6 +58,8 @@ class PlannedItemsView(QWidget):
         """
         super().__init__(parent)
         self.controller = controller
+        self._selected_item = None
+        self._accounts = []
         self._setup_ui()
     
     def _setup_ui(self) -> None:
@@ -59,10 +68,8 @@ class PlannedItemsView(QWidget):
         layout.setSpacing(20)
         layout.setContentsMargins(32, 32, 32, 32)
         
-        # Başlık ve butonlar
         header_layout = QHBoxLayout()
         
-        # Sol taraf: Başlık
         title_layout = QVBoxLayout()
         title_layout.setSpacing(4)
         
@@ -82,7 +89,6 @@ class PlannedItemsView(QWidget):
         header_layout.addLayout(title_layout)
         header_layout.addStretch()
         
-        # Yeni planlanan işlem butonu
         self.add_btn = QPushButton("Yeni Planlanan İşlem")
         self.add_btn.setStyleSheet(f"""
             QPushButton {{
@@ -99,7 +105,6 @@ class PlannedItemsView(QWidget):
         
         layout.addLayout(header_layout)
         
-        # Bilgi kartı
         info_card = QLabel(
             "Gerçekleştir butonuna tıklayarak planlanan işlemi gerçek bir işleme dönüştürebilirsiniz."
         )
@@ -114,14 +119,15 @@ class PlannedItemsView(QWidget):
         """)
         layout.addWidget(info_card)
         
-        # Planlanan işlem tablosu
+        splitter = QSplitter(Qt.Orientation.Horizontal)
+        splitter.setStyleSheet("QSplitter::handle { background-color: transparent; }")
+        
         self.table = QTableWidget()
-        self.table.setColumnCount(8)
+        self.table.setColumnCount(7)
         self.table.setHorizontalHeaderLabels([
-            "ID", "Tarih", "Hesap", "Tip", "Kategori", "Açıklama", "Tutar", "İşlemler"
+            "ID", "Tarih", "Hesap", "Tip", "Kategori", "Açıklama", "Tutar"
         ])
         
-        # Sütun genişlikleri
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)
         header.setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed)
@@ -130,24 +136,239 @@ class PlannedItemsView(QWidget):
         header.setSectionResizeMode(4, QHeaderView.ResizeMode.Fixed)
         header.setSectionResizeMode(5, QHeaderView.ResizeMode.Stretch)
         header.setSectionResizeMode(6, QHeaderView.ResizeMode.Fixed)
-        header.setSectionResizeMode(7, QHeaderView.ResizeMode.Fixed)
         
         self.table.setColumnWidth(0, 50)
         self.table.setColumnWidth(1, 100)
         self.table.setColumnWidth(3, 80)
         self.table.setColumnWidth(4, 120)
         self.table.setColumnWidth(6, 140)
-        self.table.setColumnWidth(7, 280)
         
-        # ID sütununu gizle
         self.table.setColumnHidden(0, True)
-        
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.table.verticalHeader().setVisible(False)
         self.table.setShowGrid(False)
+        self.table.itemSelectionChanged.connect(self._on_selection_changed)
         
-        layout.addWidget(self.table)
+        splitter.addWidget(self.table)
+        
+        self.detail_panel = self._create_detail_panel()
+        splitter.addWidget(self.detail_panel)
+        
+        splitter.setSizes([550, 350])
+        layout.addWidget(splitter)
+    
+    def _create_detail_panel(self) -> QFrame:
+        """Detay panelini oluşturur."""
+        panel = QFrame()
+        panel.setStyleSheet(f"""
+            QFrame {{
+                background-color: {COLORS.BG_CARD};
+                border: 1px solid {COLORS.BORDER};
+                border-radius: 12px;
+            }}
+        """)
+        
+        layout = QVBoxLayout(panel)
+        layout.setSpacing(12)
+        layout.setContentsMargins(20, 20, 20, 20)
+        
+        self.detail_title = QLabel("Planlanan İşlem Detayları")
+        self.detail_title.setStyleSheet(f"""
+            font-size: 18px;
+            font-weight: 600;
+            color: {COLORS.TEXT_PRIMARY};
+            border: none;
+        """)
+        layout.addWidget(self.detail_title)
+        
+        date_label = QLabel("Planlanan Tarih")
+        date_label.setStyleSheet(f"color: {COLORS.TEXT_SECONDARY}; font-size: 12px; border: none;")
+        layout.addWidget(date_label)
+        
+        self.detail_date = QDateEdit()
+        self.detail_date.setCalendarPopup(True)
+        self.detail_date.setDate(QDate.currentDate())
+        layout.addWidget(self.detail_date)
+        
+        account_label = QLabel("Hesap")
+        account_label.setStyleSheet(f"color: {COLORS.TEXT_SECONDARY}; font-size: 12px; border: none;")
+        layout.addWidget(account_label)
+        
+        self.detail_account = QComboBox()
+        layout.addWidget(self.detail_account)
+        
+        type_label = QLabel("İşlem Tipi")
+        type_label.setStyleSheet(f"color: {COLORS.TEXT_SECONDARY}; font-size: 12px; border: none;")
+        layout.addWidget(type_label)
+        
+        self.detail_type = QComboBox()
+        self.detail_type.addItem("Gelir", "income")
+        self.detail_type.addItem("Gider", "expense")
+        layout.addWidget(self.detail_type)
+        
+        category_label = QLabel("Kategori")
+        category_label.setStyleSheet(f"color: {COLORS.TEXT_SECONDARY}; font-size: 12px; border: none;")
+        layout.addWidget(category_label)
+        
+        self.detail_category = QLineEdit()
+        self.detail_category.setPlaceholderText("Kategori girin...")
+        layout.addWidget(self.detail_category)
+        
+        amount_label = QLabel("Tutar")
+        amount_label.setStyleSheet(f"color: {COLORS.TEXT_SECONDARY}; font-size: 12px; border: none;")
+        layout.addWidget(amount_label)
+        
+        self.detail_amount = QDoubleSpinBox()
+        self.detail_amount.setRange(0, 999999999)
+        self.detail_amount.setDecimals(2)
+        self.detail_amount.setPrefix("₺ ")
+        layout.addWidget(self.detail_amount)
+        
+        desc_label = QLabel("Açıklama")
+        desc_label.setStyleSheet(f"color: {COLORS.TEXT_SECONDARY}; font-size: 12px; border: none;")
+        layout.addWidget(desc_label)
+        
+        self.detail_description = QLineEdit()
+        self.detail_description.setPlaceholderText("Açıklama girin...")
+        layout.addWidget(self.detail_description)
+        
+        layout.addStretch()
+        
+        btn_layout = QHBoxLayout()
+        
+        self.realize_detail_btn = QPushButton("Gerçekleştir")
+        self.realize_detail_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {COLORS.PRIMARY};
+                padding: 10px 16px;
+            }}
+            QPushButton:hover {{
+                background-color: {COLORS.PRIMARY_HOVER};
+            }}
+        """)
+        self.realize_detail_btn.clicked.connect(self._on_realize_selected)
+        btn_layout.addWidget(self.realize_detail_btn)
+        
+        self.save_btn = QPushButton("Kaydet")
+        self.save_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {COLORS.SUCCESS};
+                padding: 10px 16px;
+            }}
+            QPushButton:hover {{
+                background-color: {COLORS.SUCCESS_LIGHT};
+            }}
+        """)
+        self.save_btn.clicked.connect(self._on_save_detail)
+        btn_layout.addWidget(self.save_btn)
+        
+        self.delete_btn = QPushButton("Sil")
+        self.delete_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {COLORS.DANGER};
+                padding: 10px 16px;
+            }}
+            QPushButton:hover {{
+                background-color: {COLORS.DANGER_LIGHT};
+            }}
+        """)
+        self.delete_btn.clicked.connect(self._on_delete_selected)
+        btn_layout.addWidget(self.delete_btn)
+        
+        layout.addLayout(btn_layout)
+        
+        self._set_detail_enabled(False)
+        
+        return panel
+    
+    def _set_detail_enabled(self, enabled: bool) -> None:
+        """Detay panelini etkinleştirir/devre dışı bırakır."""
+        self.detail_date.setEnabled(enabled)
+        self.detail_account.setEnabled(enabled)
+        self.detail_type.setEnabled(enabled)
+        self.detail_category.setEnabled(enabled)
+        self.detail_amount.setEnabled(enabled)
+        self.detail_description.setEnabled(enabled)
+        self.realize_detail_btn.setEnabled(enabled)
+        self.save_btn.setEnabled(enabled)
+        self.delete_btn.setEnabled(enabled)
+        
+        if not enabled:
+            self.detail_category.clear()
+            self.detail_description.clear()
+            self.detail_amount.setValue(0)
+            self.detail_title.setText("Planlanan İşlem Detayları")
+    
+    def _on_selection_changed(self) -> None:
+        """Tablo seçimi değiştiğinde çağrılır."""
+        selected_rows = self.table.selectionModel().selectedRows()
+        if not selected_rows:
+            self._selected_item = None
+            self._set_detail_enabled(False)
+            return
+        
+        row = selected_rows[0].row()
+        item_id = int(self.table.item(row, 0).text())
+        
+        all_items = self.controller.get_all_planned_items()
+        self._selected_item = next((i for i in all_items if i.id == item_id), None)
+        
+        if self._selected_item:
+            self._load_detail(self._selected_item)
+            self._set_detail_enabled(True)
+    
+    def _load_detail(self, item: PlannedItem) -> None:
+        """Planlanan işlem detaylarını panele yükler."""
+        self.detail_title.setText(f"{item.category or 'Planlanan'}")
+        
+        self.detail_date.setDate(QDate(item.planned_date.year, item.planned_date.month, item.planned_date.day))
+        
+        self.detail_account.clear()
+        self._accounts = self.controller.get_all_accounts()
+        for acc in self._accounts:
+            self.detail_account.addItem(acc.name, acc.id)
+        
+        acc_index = self.detail_account.findData(item.account_id)
+        if acc_index >= 0:
+            self.detail_account.setCurrentIndex(acc_index)
+        
+        type_index = self.detail_type.findData(item.transaction_type)
+        if type_index >= 0:
+            self.detail_type.setCurrentIndex(type_index)
+        
+        self.detail_category.setText(item.category or "")
+        self.detail_amount.setValue(item.amount)
+        self.detail_description.setText(item.description or "")
+    
+    def _on_save_detail(self) -> None:
+        """Detay panelinden planlanan işlemi kaydeder."""
+        if not self._selected_item:
+            return
+        
+        qdate = self.detail_date.date()
+        from datetime import date as dt_date
+        
+        self._selected_item.planned_date = dt_date(qdate.year(), qdate.month(), qdate.day())
+        self._selected_item.account_id = self.detail_account.currentData()
+        self._selected_item.transaction_type = self.detail_type.currentData()
+        self._selected_item.category = self.detail_category.text().strip()
+        self._selected_item.amount = self.detail_amount.value()
+        self._selected_item.description = self.detail_description.text().strip()
+        
+        self.controller.update_planned_item(self._selected_item)
+        self.refresh()
+        self.planned_item_changed.emit()
+    
+    def _on_delete_selected(self) -> None:
+        """Seçili planlanan işlemi siler."""
+        if self._selected_item:
+            self._on_delete_planned_item(self._selected_item)
+    
+    def _on_realize_selected(self) -> None:
+        """Seçili planlanan işlemi gerçekleştirir."""
+        if self._selected_item:
+            self._on_realize_item(self._selected_item)
     
     def refresh(self) -> None:
         """Planlanan işlem listesini yeniler."""
@@ -157,15 +378,12 @@ class PlannedItemsView(QWidget):
         self.table.setRowCount(len(planned_items))
         
         for row, item in enumerate(planned_items):
-            # ID (gizli)
             id_item = QTableWidgetItem(str(item.id))
             self.table.setItem(row, 0, id_item)
             
-            # Tarih
             date_str = item.planned_date.strftime("%d.%m.%Y")
             date_item = QTableWidgetItem(date_str)
             
-            # Vadesi geçmiş mi kontrol
             if item.is_overdue:
                 date_item.setForeground(QColor(COLORS.DANGER))
                 date_item.setToolTip("Vadesi geçmiş!")
@@ -175,12 +393,10 @@ class PlannedItemsView(QWidget):
             
             self.table.setItem(row, 1, date_item)
             
-            # Hesap
             account = accounts.get(item.account_id)
             account_name = account.name if account else "-"
             self.table.setItem(row, 2, QTableWidgetItem(account_name))
             
-            # Tip
             if item.is_income:
                 type_text = "Gelir"
                 color = COLORS.SUCCESS
@@ -191,92 +407,15 @@ class PlannedItemsView(QWidget):
             type_item.setForeground(QColor(color))
             self.table.setItem(row, 3, type_item)
             
-            # Kategori
             self.table.setItem(row, 4, QTableWidgetItem(item.category or "-"))
             
-            # Açıklama
             self.table.setItem(row, 5, QTableWidgetItem(item.description or "-"))
             
-            # Tutar
             symbol = CURRENCIES[item.currency].symbol
             amount_text = f"{symbol}{item.amount:,.2f}"
             amount_item = QTableWidgetItem(amount_text)
             amount_item.setForeground(QColor(color))
             self.table.setItem(row, 6, amount_item)
-            
-            # İşlem butonları
-            self._add_action_buttons(row, item)
-    
-    def _add_action_buttons(self, row: int, item: PlannedItem) -> None:
-        """
-        Satıra işlem butonlarını ekler.
-        
-        Args:
-            row: Satır indeksi
-            item: Planlanan işlem nesnesi
-        """
-        button_widget = QWidget()
-        button_widget.setStyleSheet("background-color: transparent;")
-        button_layout = QHBoxLayout(button_widget)
-        button_layout.setContentsMargins(8, 4, 8, 4)
-        button_layout.setSpacing(8)
-        
-        # Gerçekleştir butonu
-        realize_btn = QPushButton("Gerçekleştir")
-        realize_btn.setFixedHeight(32)
-        realize_btn.setStyleSheet(f"""
-            QPushButton {{
-                background-color: {COLORS.PRIMARY};
-                padding: 6px 16px;
-                font-size: 12px;
-                font-weight: 600;
-            }}
-            QPushButton:hover {{
-                background-color: {COLORS.PRIMARY_HOVER};
-            }}
-        """)
-        realize_btn.setToolTip("Bu planlanan işlemi gerçek işleme dönüştür")
-        realize_btn.clicked.connect(lambda: self._on_realize_item(item))
-        button_layout.addWidget(realize_btn)
-        
-        # Düzenle butonu
-        edit_btn = QPushButton("Düzenle")
-        edit_btn.setFixedHeight(32)
-        edit_btn.setStyleSheet(f"""
-            QPushButton {{
-                background-color: {COLORS.BG_ELEVATED};
-                border: 1px solid {COLORS.BORDER};
-                padding: 6px 12px;
-                font-size: 12px;
-            }}
-            QPushButton:hover {{
-                background-color: {COLORS.BG_INPUT};
-                border-color: {COLORS.BORDER_LIGHT};
-            }}
-        """)
-        edit_btn.clicked.connect(lambda: self._on_edit_planned_item(item))
-        button_layout.addWidget(edit_btn)
-        
-        # Sil butonu
-        delete_btn = QPushButton("Sil")
-        delete_btn.setFixedHeight(32)
-        delete_btn.setStyleSheet(f"""
-            QPushButton {{
-                background-color: transparent;
-                border: 1px solid {COLORS.DANGER};
-                color: {COLORS.DANGER};
-                padding: 6px 12px;
-                font-size: 12px;
-            }}
-            QPushButton:hover {{
-                background-color: {COLORS.DANGER};
-                color: {COLORS.TEXT_PRIMARY};
-            }}
-        """)
-        delete_btn.clicked.connect(lambda: self._on_delete_planned_item(item))
-        button_layout.addWidget(delete_btn)
-        
-        self.table.setCellWidget(row, 7, button_widget)
     
     def _on_add_planned_item(self) -> None:
         """Yeni planlanan işlem ekleme."""
