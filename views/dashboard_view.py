@@ -68,7 +68,6 @@ class DashboardView(QWidget):
         layout.setSpacing(24)
         layout.setContentsMargins(32, 32, 32, 32)
         
-        # Başlık
         header_layout = QVBoxLayout()
         header_layout.setSpacing(4)
         
@@ -90,11 +89,9 @@ class DashboardView(QWidget):
         
         layout.addLayout(header_layout)
         
-        # Özet kartları satırı
         cards_layout = QHBoxLayout()
         cards_layout.setSpacing(20)
         
-        # Toplam Varlık kartı
         self.total_card = self._create_summary_card(
             "Toplam Varlık",
             "₺0.00",
@@ -103,7 +100,6 @@ class DashboardView(QWidget):
         )
         cards_layout.addWidget(self.total_card)
         
-        # Toplam Gelir kartı
         self.income_card = self._create_summary_card(
             "Toplam Gelir",
             "₺0.00",
@@ -112,7 +108,6 @@ class DashboardView(QWidget):
         )
         cards_layout.addWidget(self.income_card)
         
-        # Toplam Gider kartı
         self.expense_card = self._create_summary_card(
             "Toplam Gider",
             "₺0.00",
@@ -123,15 +118,12 @@ class DashboardView(QWidget):
         
         layout.addLayout(cards_layout)
         
-        # Alt bölüm: Yaklaşan ödemeler ve Son işlemler
         bottom_layout = QHBoxLayout()
         bottom_layout.setSpacing(20)
         
-        # Yaklaşan Ödemeler
         self.upcoming_group = self._create_upcoming_section()
         bottom_layout.addWidget(self.upcoming_group, 1)
         
-        # Son İşlemler
         self.recent_group = self._create_recent_section()
         bottom_layout.addWidget(self.recent_group, 2)
         
@@ -271,7 +263,6 @@ class DashboardView(QWidget):
     
     def _update_summary_cards(self) -> None:
         """Özet kartlarını günceller."""
-        # Toplam varlık hesaplama
         total_in_try = self.controller.get_total_assets_in_base_currency()
         symbol = CURRENCIES[BASE_CURRENCY].symbol
         
@@ -279,15 +270,12 @@ class DashboardView(QWidget):
         if value_label:
             value_label.setText(f"{symbol}{total_in_try:,.2f}")
         
-        # Gelir/Gider özeti
         summary = self.controller.get_transaction_summary()
         
-        # Gelir
         income_label = self.income_card.findChild(QLabel, "value")
         if income_label:
             income_label.setText(f"{symbol}{summary['income']:,.2f}")
         
-        # Gider
         expense_label = self.expense_card.findChild(QLabel, "value")
         if expense_label:
             expense_label.setText(f"{symbol}{summary['expense']:,.2f}")
@@ -299,17 +287,14 @@ class DashboardView(QWidget):
         self.upcoming_table.setRowCount(len(upcoming))
         
         for row, item in enumerate(upcoming):
-            # Tarih
             date_item = QTableWidgetItem(item.planned_date.strftime("%d.%m.%Y"))
             if item.is_overdue:
                 date_item.setForeground(QColor(COLORS.DANGER))
             self.upcoming_table.setItem(row, 0, date_item)
             
-            # Açıklama
             desc = item.description or item.category or "-"
             self.upcoming_table.setItem(row, 1, QTableWidgetItem(desc))
             
-            # Tutar
             symbol = CURRENCIES[item.currency].symbol
             amount_text = f"{symbol}{item.amount:,.2f}"
             amount_item = QTableWidgetItem(amount_text)
@@ -319,7 +304,6 @@ class DashboardView(QWidget):
                 amount_item.setForeground(QColor(COLORS.SUCCESS))
             self.upcoming_table.setItem(row, 2, amount_item)
             
-            # Tip
             type_text = "Gider" if item.is_expense else "Gelir"
             self.upcoming_table.setItem(row, 3, QTableWidgetItem(type_text))
     
@@ -331,22 +315,17 @@ class DashboardView(QWidget):
         self.recent_table.setRowCount(len(transactions))
         
         for row, trans in enumerate(transactions):
-            # Tarih
             date_str = trans.transaction_date.strftime("%d.%m.%Y")
             self.recent_table.setItem(row, 0, QTableWidgetItem(date_str))
             
-            # Hesap
             account = accounts.get(trans.account_id)
             account_name = account.name if account else "-"
             self.recent_table.setItem(row, 1, QTableWidgetItem(account_name))
             
-            # Kategori
             self.recent_table.setItem(row, 2, QTableWidgetItem(trans.category or "-"))
             
-            # Açıklama
             self.recent_table.setItem(row, 3, QTableWidgetItem(trans.description or "-"))
             
-            # Tutar
             symbol = CURRENCIES[trans.currency].symbol
             if trans.is_income:
                 amount_text = f"+{symbol}{trans.amount:,.2f}"

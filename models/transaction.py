@@ -284,7 +284,6 @@ class TransactionRepository:
         Returns:
             Transaction nesnesi
         """
-        # transaction_date string ise date'e çevir
         trans_date = row["transaction_date"]
         if isinstance(trans_date, str):
             trans_date = date.fromisoformat(trans_date)

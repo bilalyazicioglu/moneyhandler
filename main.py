@@ -36,34 +36,27 @@ def main() -> NoReturn:
     
     PyQt6 uygulamasını başlatır, controller ve ana pencereyi oluşturur.
     """
-    # Qt uygulaması oluştur
     app = QApplication(sys.argv)
     
-    # Uygulama meta bilgileri
     app.setApplicationName("Kişisel Finans Yönetimi")
     app.setApplicationVersion("1.0.0")
     app.setOrganizationName("MoneyHandler")
     
-    # Varsayılan font ayarla (sistem fontu)
     font = QFont()
     font.setPointSize(13)
     app.setFont(font)
     
-    # Controller oluştur
     controller = MainController()
     
-    # Ana pencereyi oluştur ve göster
     window = MainWindow(controller)
     window.show()
     
-    # Uygulama kapatıldığında temizlik
     def cleanup() -> None:
         """Uygulama kapatılırken temizlik yapar."""
         controller.close()
     
     app.aboutToQuit.connect(cleanup)
     
-    # Uygulama döngüsünü başlat
     sys.exit(app.exec())
 
 

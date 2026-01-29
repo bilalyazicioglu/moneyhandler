@@ -99,6 +99,18 @@ class TransactionsView(QWidget):
         self.filter_combo.currentIndexChanged.connect(self.refresh)
         header_layout.addWidget(self.filter_combo)
         
+        header_layout.addSpacing(12)
+        
+        search_label = QLabel("Kategori:")
+        search_label.setStyleSheet(f"color: {COLORS.TEXT_SECONDARY}; margin-right: 8px;")
+        header_layout.addWidget(search_label)
+        
+        self.category_search = QLineEdit()
+        self.category_search.setMinimumWidth(160)
+        self.category_search.setPlaceholderText("Kategori ara...")
+        self.category_search.textChanged.connect(self.refresh)
+        header_layout.addWidget(self.category_search)
+        
         header_layout.addSpacing(16)
         
         self.add_btn = QPushButton("Yeni İşlem")
@@ -180,7 +192,6 @@ class TransactionsView(QWidget):
         """)
         layout.addWidget(self.detail_title)
         
-        # Tarih
         date_label = QLabel("Tarih")
         date_label.setStyleSheet(f"color: {COLORS.TEXT_SECONDARY}; font-size: 12px; border: none;")
         layout.addWidget(date_label)
@@ -190,7 +201,6 @@ class TransactionsView(QWidget):
         self.detail_date.setDate(QDate.currentDate())
         layout.addWidget(self.detail_date)
         
-        # Hesap
         account_label = QLabel("Hesap")
         account_label.setStyleSheet(f"color: {COLORS.TEXT_SECONDARY}; font-size: 12px; border: none;")
         layout.addWidget(account_label)
@@ -198,7 +208,6 @@ class TransactionsView(QWidget):
         self.detail_account = QComboBox()
         layout.addWidget(self.detail_account)
         
-        # Tip
         type_label = QLabel("İşlem Tipi")
         type_label.setStyleSheet(f"color: {COLORS.TEXT_SECONDARY}; font-size: 12px; border: none;")
         layout.addWidget(type_label)
@@ -208,7 +217,6 @@ class TransactionsView(QWidget):
         self.detail_type.addItem("Gider", TransactionType.EXPENSE)
         layout.addWidget(self.detail_type)
         
-        # Kategori
         category_label = QLabel("Kategori")
         category_label.setStyleSheet(f"color: {COLORS.TEXT_SECONDARY}; font-size: 12px; border: none;")
         layout.addWidget(category_label)
@@ -217,7 +225,6 @@ class TransactionsView(QWidget):
         self.detail_category.setPlaceholderText("Kategori girin...")
         layout.addWidget(self.detail_category)
         
-        # Tutar
         amount_label = QLabel("Tutar")
         amount_label.setStyleSheet(f"color: {COLORS.TEXT_SECONDARY}; font-size: 12px; border: none;")
         layout.addWidget(amount_label)
@@ -228,7 +235,6 @@ class TransactionsView(QWidget):
         self.detail_amount.setPrefix("₺ ")
         layout.addWidget(self.detail_amount)
         
-        # Açıklama
         desc_label = QLabel("Açıklama")
         desc_label.setStyleSheet(f"color: {COLORS.TEXT_SECONDARY}; font-size: 12px; border: none;")
         layout.addWidget(desc_label)
@@ -314,7 +320,6 @@ class TransactionsView(QWidget):
         
         self.detail_date.setDate(QDate(trans.transaction_date.year, trans.transaction_date.month, trans.transaction_date.day))
         
-        # Hesapları güncelle
         self.detail_account.clear()
         self._accounts = self.controller.get_all_accounts()
         for acc in self._accounts:
@@ -379,6 +384,13 @@ class TransactionsView(QWidget):
             transactions = self.controller.get_all_transactions()
         else:
             transactions = self.controller.get_transactions_by_type(filter_type)
+        
+        category_filter = self.category_search.text().strip().lower()
+        if category_filter:
+            transactions = [
+                t for t in transactions 
+                if t.category and category_filter in t.category.lower()
+            ]
         
         accounts = {a.id: a for a in self.controller.get_all_accounts()}
         

@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon, QPixmap
 from PyQt6.QtWidgets import (
+    QApplication,
     QMainWindow,
     QTabWidget,
     QWidget,
@@ -71,9 +72,12 @@ class MainWindow(QMainWindow):
         """Pencere ayarlarını yapılandırır."""
         self.setWindowTitle("MoneyHandler - Kişisel Finans Yönetimi")
         self.setMinimumSize(WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT)
-        self.resize(1200, 800)
         
-        # Pencere ikonu
+        screen = QApplication.primaryScreen()
+        if screen:
+            available_geometry = screen.availableGeometry()
+            self.setGeometry(available_geometry)
+        
         icon_path = resource_path("assets/icon.ico")
         if os.path.exists(icon_path):
             self.setWindowIcon(QIcon(icon_path))
@@ -89,13 +93,11 @@ class MainWindow(QMainWindow):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
         
-        # Header with logo
         header = QWidget()
         header.setStyleSheet(f"background-color: {COLORS.BG_CARD}; border-bottom: 1px solid {COLORS.BORDER};")
         header_layout = QHBoxLayout(header)
         header_layout.setContentsMargins(20, 12, 20, 12)
         
-        # Logo
         logo_label = QLabel()
         logo_path = resource_path("assets/logo.png")
         if os.path.exists(logo_path):
@@ -103,7 +105,6 @@ class MainWindow(QMainWindow):
             logo_label.setPixmap(pixmap.scaled(36, 36, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
         header_layout.addWidget(logo_label)
         
-        # App name
         app_name = QLabel("MoneyHandler")
         app_name.setStyleSheet(f"""
             font-size: 20px;
@@ -116,45 +117,35 @@ class MainWindow(QMainWindow):
         
         layout.addWidget(header)
         
-        # Sekme widget'ı
         self.tab_widget = QTabWidget()
         self.tab_widget.setDocumentMode(True)
         
-        # Dashboard sekmesi
         self.dashboard_view = DashboardView(self.controller)
         self.tab_widget.addTab(self.dashboard_view, "Dashboard")
         
-        # Hesaplar sekmesi
         self.accounts_view = AccountsView(self.controller)
         self.tab_widget.addTab(self.accounts_view, "Hesaplar")
         
-        # İşlemler sekmesi
         self.transactions_view = TransactionsView(self.controller)
         self.tab_widget.addTab(self.transactions_view, "İşlemler")
         
-        # Planlanan İşlemler sekmesi
         self.planned_items_view = PlannedItemsView(self.controller)
         self.tab_widget.addTab(self.planned_items_view, "Planlanan")
         
         layout.addWidget(self.tab_widget)
         
-        # Durum çubuğu
         self.status_bar = QStatusBar()
         self.setStatusBar(self.status_bar)
         self._update_status_bar()
     
     def _connect_signals(self) -> None:
         """Signal/slot bağlantılarını kurar."""
-        # Sekme değişikliği
         self.tab_widget.currentChanged.connect(self._on_tab_changed)
         
-        # Hesap değişiklikleri
         self.accounts_view.account_changed.connect(self._on_data_changed)
         
-        # İşlem değişiklikleri
         self.transactions_view.transaction_changed.connect(self._on_data_changed)
         
-        # Planlanan işlem değişiklikleri
         self.planned_items_view.planned_item_changed.connect(self._on_data_changed)
         self.planned_items_view.item_realized.connect(self._on_data_changed)
     
@@ -165,7 +156,6 @@ class MainWindow(QMainWindow):
         Args:
             index: Yeni sekme indeksi
         """
-        # İlgili view'ı yenile
         current_widget = self.tab_widget.currentWidget()
         if hasattr(current_widget, 'refresh'):
             current_widget.refresh()

@@ -15,6 +15,7 @@ a = Analysis(
     datas=[
         ('assets/logo.png', 'assets'),
         ('assets/icon.ico', 'assets'),
+        ('assets/icon.icns', 'assets'),
     ],
     hiddenimports=[
         'PyQt6.QtCore',
@@ -60,7 +61,7 @@ exe = EXE(
 app = BUNDLE(
     exe,
     name='MoneyHandler.app',
-    icon='assets/icon.ico',
+    icon='assets/icon.icns',
     bundle_identifier='com.moneyhandler.app',
     info_plist={
         'CFBundleShortVersionString': '1.0.0',

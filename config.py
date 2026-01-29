@@ -12,9 +12,7 @@ import sys
 import os
 
 
-# =============================================================================
-# VERİTABANI AYARLARI
-# =============================================================================
+
 
 def get_database_path() -> Path:
     """PyInstaller ve geliştirme modunda çalışan veritabanı yolu."""
@@ -32,9 +30,7 @@ def get_database_path() -> Path:
 DATABASE_PATH: Path = get_database_path()
 
 
-# =============================================================================
-# PARA BİRİMİ AYARLARI
-# =============================================================================
+
 
 @dataclass(frozen=True)
 class Currency:
@@ -82,80 +78,90 @@ def convert_to_base_currency(amount: float, from_currency: str) -> float:
     return amount * EXCHANGE_RATES[from_currency]
 
 
-# =============================================================================
-# RENK PALETİ (Modern Koyu Tema)
-# =============================================================================
+def convert_currency(amount: float, from_currency: str, to_currency: str) -> float:
+    """
+    Bir para biriminden diğerine dönüştürür.
+    
+    Args:
+        amount: Çevrilecek miktar
+        from_currency: Kaynak para birimi kodu (TRY, USD, EUR)
+        to_currency: Hedef para birimi kodu (TRY, USD, EUR)
+        
+    Returns:
+        Hedef para birimi cinsinden miktar
+        
+    Raises:
+        ValueError: Geçersiz para birimi kodu
+    """
+    if from_currency == to_currency:
+        return amount
+    
+    if from_currency not in EXCHANGE_RATES or to_currency not in EXCHANGE_RATES:
+        raise ValueError(f"Geçersiz para birimi")
+    
+    # Önce TRY'ye çevir, sonra hedef para birimine
+    try_amount = convert_to_base_currency(amount, from_currency)
+    return try_amount / EXCHANGE_RATES[to_currency]
+
+
+
 
 @dataclass(frozen=True)
 class Colors:
     """Uygulama renk paleti."""
-    # Ana renkler
-    PRIMARY: str = "#7C3AED"        # Mor (ana vurgu)
+    PRIMARY: str = "#7C3AED"
     PRIMARY_HOVER: str = "#8B5CF6"
     PRIMARY_DARK: str = "#6D28D9"
-    SECONDARY: str = "#06B6D4"      # Cyan
-    ACCENT: str = "#F43F5E"         # Rose
+    SECONDARY: str = "#06B6D4"
+    ACCENT: str = "#F43F5E"
     
-    # Arka plan renkleri
-    BG_DARK: str = "#0F0F1A"        # Ana arka plan
-    BG_CARD: str = "#1A1A2E"        # Kart arka planı
-    BG_ELEVATED: str = "#252542"    # Yükseltilmiş element
-    BG_INPUT: str = "#2A2A4A"       # Input alanları
+    BG_DARK: str = "#0F0F1A"
+    BG_CARD: str = "#1A1A2E"
+    BG_ELEVATED: str = "#252542"
+    BG_INPUT: str = "#2A2A4A"
     
-    # Metin renkleri
-    TEXT_PRIMARY: str = "#F8FAFC"   # Ana metin
-    TEXT_SECONDARY: str = "#94A3B8" # İkincil metin
-    TEXT_MUTED: str = "#64748B"     # Soluk metin
+    TEXT_PRIMARY: str = "#F8FAFC"
+    TEXT_SECONDARY: str = "#94A3B8"
+    TEXT_MUTED: str = "#64748B"
     
-    # Durum renkleri
-    SUCCESS: str = "#10B981"        # Başarı (Gelir)
+    SUCCESS: str = "#10B981"
     SUCCESS_LIGHT: str = "#34D399"
-    DANGER: str = "#EF4444"         # Tehlike (Gider)
+    DANGER: str = "#EF4444"
     DANGER_LIGHT: str = "#F87171"
-    WARNING: str = "#F59E0B"        # Uyarı
-    INFO: str = "#3B82F6"           # Bilgi
+    WARNING: str = "#F59E0B"
+    INFO: str = "#3B82F6"
     
-    # Kenarlık ve çizgiler
     BORDER: str = "#334155"
     BORDER_LIGHT: str = "#475569"
     
-    # Gradient
     GRADIENT_START: str = "#7C3AED"
     GRADIENT_END: str = "#06B6D4"
 
 
-# Singleton renk nesnesi
+
 COLORS = Colors()
 
 
-# =============================================================================
-# İŞLEM TİPLERİ
-# =============================================================================
+
 
 class TransactionType:
     """İşlem tipi sabitleri."""
-    INCOME: str = "income"      # Gelir
-    EXPENSE: str = "expense"    # Gider
+    INCOME: str = "income"
+    EXPENSE: str = "expense"
 
 
-# =============================================================================
-# UI SABİTLERİ
-# =============================================================================
 
-# Pencere boyutları
+
+
 WINDOW_MIN_WIDTH: int = 1100
 WINDOW_MIN_HEIGHT: int = 750
 
-# Tablo ayarları
 TABLE_ROW_HEIGHT: int = 48
 
-# Yaklaşan ödemeler için gün sayısı
 UPCOMING_DAYS_THRESHOLD: int = 7
 
 
-# =============================================================================
-# STİL ŞABLONU
-# =============================================================================
+
 
 def get_stylesheet() -> str:
     """

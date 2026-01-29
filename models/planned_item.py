@@ -254,7 +254,6 @@ class PlannedItemRepository:
         Returns:
             PlannedItem nesnesi
         """
-        # planned_date string ise date'e çevir
         plan_date = row["planned_date"]
         if isinstance(plan_date, str):
             plan_date = date.fromisoformat(plan_date)

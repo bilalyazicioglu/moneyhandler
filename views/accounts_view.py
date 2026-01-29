@@ -63,10 +63,8 @@ class AccountsView(QWidget):
         layout.setSpacing(20)
         layout.setContentsMargins(32, 32, 32, 32)
         
-        # Başlık ve butonlar
         header_layout = QHBoxLayout()
         
-        # Sol taraf: Başlık
         title_layout = QVBoxLayout()
         title_layout.setSpacing(4)
         
@@ -86,7 +84,6 @@ class AccountsView(QWidget):
         header_layout.addLayout(title_layout)
         header_layout.addStretch()
         
-        # Yeni hesap butonu
         self.add_btn = QPushButton("Yeni Hesap")
         self.add_btn.setStyleSheet(f"""
             QPushButton {{
@@ -103,11 +100,9 @@ class AccountsView(QWidget):
         
         layout.addLayout(header_layout)
         
-        # Splitter: Tablo + Detay paneli
         splitter = QSplitter(Qt.Orientation.Horizontal)
         splitter.setStyleSheet("QSplitter::handle { background-color: transparent; }")
         
-        # Sol: Hesap tablosu
         self.table = QTableWidget()
         self.table.setColumnCount(5)
         self.table.setHorizontalHeaderLabels([
@@ -135,7 +130,6 @@ class AccountsView(QWidget):
         
         splitter.addWidget(self.table)
         
-        # Sağ: Detay paneli
         self.detail_panel = self._create_detail_panel()
         splitter.addWidget(self.detail_panel)
         
@@ -157,7 +151,6 @@ class AccountsView(QWidget):
         layout.setSpacing(16)
         layout.setContentsMargins(20, 20, 20, 20)
         
-        # Başlık
         self.detail_title = QLabel("Hesap Detayları")
         self.detail_title.setStyleSheet(f"""
             font-size: 18px;
@@ -167,7 +160,6 @@ class AccountsView(QWidget):
         """)
         layout.addWidget(self.detail_title)
         
-        # Hesap Adı
         name_label = QLabel("Hesap Adı")
         name_label.setStyleSheet(f"color: {COLORS.TEXT_SECONDARY}; font-size: 12px; border: none;")
         layout.addWidget(name_label)
@@ -176,7 +168,6 @@ class AccountsView(QWidget):
         self.detail_name.setPlaceholderText("Hesap adı girin...")
         layout.addWidget(self.detail_name)
         
-        # Hesap Tipi
         type_label = QLabel("Hesap Tipi")
         type_label.setStyleSheet(f"color: {COLORS.TEXT_SECONDARY}; font-size: 12px; border: none;")
         layout.addWidget(type_label)
@@ -186,7 +177,6 @@ class AccountsView(QWidget):
         self.detail_type.addItem("Banka", "bank")
         layout.addWidget(self.detail_type)
         
-        # Para Birimi
         currency_label = QLabel("Para Birimi")
         currency_label.setStyleSheet(f"color: {COLORS.TEXT_SECONDARY}; font-size: 12px; border: none;")
         layout.addWidget(currency_label)
@@ -196,7 +186,6 @@ class AccountsView(QWidget):
             self.detail_currency.addItem(f"{currency.symbol} {currency.name}", code)
         layout.addWidget(self.detail_currency)
         
-        # Bakiye (sadece görüntüleme)
         balance_label = QLabel("Bakiye")
         balance_label.setStyleSheet(f"color: {COLORS.TEXT_SECONDARY}; font-size: 12px; border: none;")
         layout.addWidget(balance_label)
@@ -212,7 +201,6 @@ class AccountsView(QWidget):
         
         layout.addStretch()
         
-        # Butonlar
         btn_layout = QHBoxLayout()
         
         self.save_btn = QPushButton("Kaydet")
@@ -243,7 +231,6 @@ class AccountsView(QWidget):
         
         layout.addLayout(btn_layout)
         
-        # Başlangıçta devre dışı
         self._set_detail_enabled(False)
         
         return panel

@@ -31,18 +31,13 @@ class MainController:
     
     def __init__(self) -> None:
         """Controller başlatıcısı."""
-        # Veritabanını başlat
         self._db = get_database()
         
-        # Repository'leri oluştur
         self._account_repo = AccountRepository()
         self._transaction_repo = TransactionRepository()
         self._planned_item_repo = PlannedItemRepository()
     
-    # =========================================================================
-    # HESAP İŞLEMLERİ
-    # =========================================================================
-    
+
     def get_all_accounts(self) -> List[Account]:
         """
         Tüm hesapları getirir.
@@ -115,10 +110,7 @@ class MainController:
         
         return total
     
-    # =========================================================================
-    # İŞLEM İŞLEMLERİ
-    # =========================================================================
-    
+
     def get_all_transactions(self) -> List[Transaction]:
         """
         Tüm işlemleri getirir.
@@ -162,10 +154,8 @@ class MainController:
         Returns:
             ID atanmış işlem
         """
-        # İşlemi kaydet
         result = self._transaction_repo.create(transaction)
         
-        # Hesap bakiyesini güncelle
         amount_change = transaction.signed_amount
         self._account_repo.update_balance(transaction.account_id, amount_change)
         
@@ -186,17 +176,14 @@ class MainController:
         Returns:
             Başarılı ise True
         """
-        # Eski işlemin etkisini geri al
         old_amount_change = old_transaction.signed_amount
         self._account_repo.update_balance(
             old_transaction.account_id,
             -old_amount_change
         )
         
-        # Yeni işlemi kaydet
         result = self._transaction_repo.update(new_transaction)
         
-        # Yeni işlemin etkisini uygula
         new_amount_change = new_transaction.signed_amount
         self._account_repo.update_balance(
             new_transaction.account_id,
@@ -215,14 +202,12 @@ class MainController:
         Returns:
             Başarılı ise True
         """
-        # İşlemin etkisini geri al
         amount_change = transaction.signed_amount
         self._account_repo.update_balance(
             transaction.account_id,
             -amount_change
         )
         
-        # İşlemi sil
         return self._transaction_repo.delete(transaction.id)
     
     def get_transaction_summary(self) -> Dict[str, float]:
@@ -249,10 +234,7 @@ class MainController:
             'expense': expense_total
         }
     
-    # =========================================================================
-    # PLANLANAN İŞLEM İŞLEMLERİ
-    # =========================================================================
-    
+
     def get_all_planned_items(self) -> List[PlannedItem]:
         """
         Tüm planlanan işlemleri getirir.
@@ -321,7 +303,6 @@ class MainController:
             Başarılı ise True
         """
         try:
-            # Yeni transaction oluştur
             transaction = Transaction(
                 account_id=item.account_id,
                 transaction_type=item.transaction_type,
@@ -332,10 +313,8 @@ class MainController:
                 transaction_date=date.today()  # Bugünün tarihi ile
             )
             
-            # Transaction'ı kaydet (bakiye otomatik güncellenir)
             self.create_transaction(transaction)
             
-            # Planlanan işlemi sil
             self._planned_item_repo.delete(item.id)
             
             return True
@@ -343,10 +322,7 @@ class MainController:
             print(f"Hata: Planlanan işlem gerçekleştirilemedi - {e}")
             return False
     
-    # =========================================================================
-    # YARDIMCI METODLAR
-    # =========================================================================
-    
+
     def close(self) -> None:
         """Veritabanı bağlantısını kapatır."""
         self._db.close()
