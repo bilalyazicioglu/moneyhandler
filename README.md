@@ -10,6 +10,9 @@
 </p>
 
 ---
+## Purpose
+
+I made that app fully on python according to my needing
 
 ## Özellikler
 
