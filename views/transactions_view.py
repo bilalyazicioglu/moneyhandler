@@ -46,6 +46,10 @@ class TransactionsView(QWidget):
     
     transaction_changed = pyqtSignal()
     
+    SORT_NONE = 0
+    SORT_ASC = 1
+    SORT_DESC = 2
+    
     def __init__(self, controller: 'MainController', parent=None) -> None:
         """
         TransactionsView başlatıcısı.
@@ -58,6 +62,8 @@ class TransactionsView(QWidget):
         self.controller = controller
         self._selected_transaction = None
         self._accounts = []
+        self._sort_column = None
+        self._sort_order = self.SORT_NONE
         self._setup_ui()
     
     def _setup_ui(self) -> None:
@@ -158,6 +164,10 @@ class TransactionsView(QWidget):
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.table.verticalHeader().setVisible(False)
         self.table.setShowGrid(False)
+        self.table.setSortingEnabled(False)
+        
+        header.setSectionsClickable(True)
+        header.sectionClicked.connect(self._on_header_clicked)
         self.table.itemSelectionChanged.connect(self._on_selection_changed)
         
         splitter.addWidget(self.table)
@@ -376,6 +386,79 @@ class TransactionsView(QWidget):
         if self._selected_transaction:
             self._on_delete_transaction(self._selected_transaction)
     
+    def _on_header_clicked(self, logical_index: int) -> None:
+        """
+        Sütun başlığına tıklandığında sıralama yapar.
+        
+        Args:
+            logical_index: Tıklanan sütun indeksi
+        """
+        if logical_index == 0:
+            return
+        
+        if self._sort_column == logical_index:
+            if self._sort_order == self.SORT_NONE:
+                self._sort_order = self.SORT_ASC
+            elif self._sort_order == self.SORT_ASC:
+                self._sort_order = self.SORT_DESC
+            else:
+                self._sort_order = self.SORT_NONE
+        else:
+            self._sort_column = logical_index
+            self._sort_order = self.SORT_ASC
+        
+        self._update_header_indicators()
+        self.refresh()
+    
+    def _update_header_indicators(self) -> None:
+        """Sütun başlıklarındaki sıralama göstergelerini günceller."""
+        column_names = ["ID", "Tarih", "Hesap", "Tip", "Kategori", "Açıklama", "Tutar"]
+        
+        for i, name in enumerate(column_names):
+            if i == self._sort_column:
+                if self._sort_order == self.SORT_ASC:
+                    self.table.horizontalHeaderItem(i).setText(f"{name} ▲")
+                elif self._sort_order == self.SORT_DESC:
+                    self.table.horizontalHeaderItem(i).setText(f"{name} ▼")
+                else:
+                    self.table.horizontalHeaderItem(i).setText(name)
+            else:
+                self.table.horizontalHeaderItem(i).setText(name)
+    
+    def _sort_transactions(self, transactions: list) -> list:
+        """
+        İşlemleri mevcut sıralama durumuna göre sıralar.
+        
+        Args:
+            transactions: Sıralanacak işlemler listesi
+            
+        Returns:
+            Sıralanmış işlemler listesi
+        """
+        if self._sort_order == self.SORT_NONE or self._sort_column is None:
+            return transactions
+        
+        accounts = {a.id: a for a in self.controller.get_all_accounts()}
+        reverse = self._sort_order == self.SORT_DESC
+        
+        def get_sort_key(trans):
+            if self._sort_column == 1:
+                return trans.transaction_date
+            elif self._sort_column == 2:
+                account = accounts.get(trans.account_id)
+                return (account.name if account else "").lower()
+            elif self._sort_column == 3:
+                return 0 if trans.is_income else 1
+            elif self._sort_column == 4:
+                return (trans.category or "").lower()
+            elif self._sort_column == 5:
+                return (trans.description or "").lower()
+            elif self._sort_column == 6:
+                return trans.amount if trans.is_income else -trans.amount
+            return 0
+        
+        return sorted(transactions, key=get_sort_key, reverse=reverse)
+    
     def refresh(self) -> None:
         """İşlem listesini yeniler."""
         filter_type = self.filter_combo.currentData()
@@ -391,6 +474,8 @@ class TransactionsView(QWidget):
                 t for t in transactions 
                 if t.category and category_filter in t.category.lower()
             ]
+        
+        transactions = self._sort_transactions(list(transactions))
         
         accounts = {a.id: a for a in self.controller.get_all_accounts()}
         

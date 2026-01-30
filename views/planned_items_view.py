@@ -48,6 +48,10 @@ class PlannedItemsView(QWidget):
     planned_item_changed = pyqtSignal()
     item_realized = pyqtSignal()
     
+    SORT_NONE = 0
+    SORT_ASC = 1
+    SORT_DESC = 2
+    
     def __init__(self, controller: 'MainController', parent=None) -> None:
         """
         PlannedItemsView başlatıcısı.
@@ -60,6 +64,8 @@ class PlannedItemsView(QWidget):
         self.controller = controller
         self._selected_item = None
         self._accounts = []
+        self._sort_column = None
+        self._sort_order = self.SORT_NONE
         self._setup_ui()
     
     def _setup_ui(self) -> None:
@@ -148,6 +154,10 @@ class PlannedItemsView(QWidget):
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.table.verticalHeader().setVisible(False)
         self.table.setShowGrid(False)
+        self.table.setSortingEnabled(False)
+        
+        header.setSectionsClickable(True)
+        header.sectionClicked.connect(self._on_header_clicked)
         self.table.itemSelectionChanged.connect(self._on_selection_changed)
         
         splitter.addWidget(self.table)
@@ -370,9 +380,83 @@ class PlannedItemsView(QWidget):
         if self._selected_item:
             self._on_realize_item(self._selected_item)
     
+    def _on_header_clicked(self, logical_index: int) -> None:
+        """
+        Sütun başlığına tıklandığında sıralama yapar.
+        
+        Args:
+            logical_index: Tıklanan sütun indeksi
+        """
+        if logical_index == 0:
+            return
+        
+        if self._sort_column == logical_index:
+            if self._sort_order == self.SORT_NONE:
+                self._sort_order = self.SORT_ASC
+            elif self._sort_order == self.SORT_ASC:
+                self._sort_order = self.SORT_DESC
+            else:
+                self._sort_order = self.SORT_NONE
+        else:
+            self._sort_column = logical_index
+            self._sort_order = self.SORT_ASC
+        
+        self._update_header_indicators()
+        self.refresh()
+    
+    def _update_header_indicators(self) -> None:
+        """Sütun başlıklarındaki sıralama göstergelerini günceller."""
+        column_names = ["ID", "Tarih", "Hesap", "Tip", "Kategori", "Açıklama", "Tutar"]
+        
+        for i, name in enumerate(column_names):
+            if i == self._sort_column:
+                if self._sort_order == self.SORT_ASC:
+                    self.table.horizontalHeaderItem(i).setText(f"{name} ▲")
+                elif self._sort_order == self.SORT_DESC:
+                    self.table.horizontalHeaderItem(i).setText(f"{name} ▼")
+                else:
+                    self.table.horizontalHeaderItem(i).setText(name)
+            else:
+                self.table.horizontalHeaderItem(i).setText(name)
+    
+    def _sort_planned_items(self, items: list) -> list:
+        """
+        Planlanan işlemleri mevcut sıralama durumuna göre sıralar.
+        
+        Args:
+            items: Sıralanacak planlanan işlemler listesi
+            
+        Returns:
+            Sıralanmış planlanan işlemler listesi
+        """
+        if self._sort_order == self.SORT_NONE or self._sort_column is None:
+            return items
+        
+        accounts = {a.id: a for a in self.controller.get_all_accounts()}
+        reverse = self._sort_order == self.SORT_DESC
+        
+        def get_sort_key(item):
+            if self._sort_column == 1:
+                return item.planned_date
+            elif self._sort_column == 2:
+                account = accounts.get(item.account_id)
+                return (account.name if account else "").lower()
+            elif self._sort_column == 3:
+                return 0 if item.is_income else 1
+            elif self._sort_column == 4:
+                return (item.category or "").lower()
+            elif self._sort_column == 5:
+                return (item.description or "").lower()
+            elif self._sort_column == 6:
+                return item.amount if item.is_income else -item.amount
+            return 0
+        
+        return sorted(items, key=get_sort_key, reverse=reverse)
+    
     def refresh(self) -> None:
         """Planlanan işlem listesini yeniler."""
         planned_items = self.controller.get_all_planned_items()
+        planned_items = self._sort_planned_items(list(planned_items))
         accounts = {a.id: a for a in self.controller.get_all_accounts()}
         
         self.table.setRowCount(len(planned_items))
