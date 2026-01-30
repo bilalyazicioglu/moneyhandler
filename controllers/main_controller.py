@@ -59,6 +59,18 @@ class MainController:
         """
         return self._account_repo.get_by_id(account_id)
     
+    def get_transactions_by_account(self, account_id: int) -> List[Transaction]:
+        """
+        Hesaba ait tüm işlemleri getirir.
+        
+        Args:
+            account_id: Hesap ID'si
+            
+        Returns:
+            İşlem listesi (en yeni ilk)
+        """
+        return self._transaction_repo.get_by_account(account_id)
+    
     def create_account(self, account: Account) -> Account:
         """
         Yeni hesap oluşturur.

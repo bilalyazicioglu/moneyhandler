@@ -22,7 +22,9 @@ from PyQt6.QtWidgets import (
     QFrame,
     QLineEdit,
     QComboBox,
-    QDoubleSpinBox
+    QDoubleSpinBox,
+    QDialog,
+    QTextEdit
 )
 from PyQt6.QtGui import QColor
 
@@ -32,6 +34,126 @@ from views.forms import AccountDialog
 
 if TYPE_CHECKING:
     from controllers.main_controller import MainController
+
+
+class AccountInfoDialog(QDialog):
+    """
+    Hesap bilgi ve işlem geçmişi popup dialog'u.
+    """
+    
+    def __init__(self, parent, account: Account, transactions: list) -> None:
+        super().__init__(parent)
+        self.account = account
+        self.transactions = transactions
+        self._setup_ui()
+    
+    def _setup_ui(self) -> None:
+        """Dialog UI'ını oluşturur."""
+        self.setWindowTitle(f"{self.account.name} - Hesap Detayları")
+        self.setMinimumSize(600, 500)
+        self.setStyleSheet(f"background-color: {COLORS.BG_DARK};")
+        
+        layout = QVBoxLayout(self)
+        layout.setSpacing(16)
+        layout.setContentsMargins(24, 24, 24, 24)
+        
+        # Başlık
+        title = QLabel(self.account.name)
+        title.setStyleSheet(f"""
+            font-size: 24px;
+            font-weight: 700;
+            color: {COLORS.TEXT_PRIMARY};
+        """)
+        layout.addWidget(title)
+        
+        # Açıklama bölümü
+        desc_label = QLabel("Açıklama")
+        desc_label.setStyleSheet(f"color: {COLORS.TEXT_SECONDARY}; font-size: 12px; margin-top: 8px;")
+        layout.addWidget(desc_label)
+        
+        description_text = QTextEdit()
+        description_text.setReadOnly(True)
+        description_text.setMaximumHeight(80)
+        description_text.setText(self.account.description if self.account.description else "Açıklama yok.")
+        description_text.setStyleSheet(f"""
+            QTextEdit {{
+                background-color: {COLORS.BG_ELEVATED};
+                border: 1px solid {COLORS.BORDER};
+                border-radius: 8px;
+                padding: 8px;
+                color: {COLORS.TEXT_PRIMARY};
+            }}
+        """)
+        layout.addWidget(description_text)
+        
+        # İşlem geçmişi bölümü
+        history_label = QLabel(f"İşlem Geçmişi ({len(self.transactions)} işlem)")
+        history_label.setStyleSheet(f"color: {COLORS.TEXT_SECONDARY}; font-size: 12px; margin-top: 8px;")
+        layout.addWidget(history_label)
+        
+        history_table = QTableWidget()
+        history_table.setColumnCount(5)
+        history_table.setHorizontalHeaderLabels(["Tarih", "Tip", "Kategori", "Açıklama", "Tutar"])
+        history_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        history_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        history_table.verticalHeader().setVisible(False)
+        history_table.setShowGrid(False)
+        
+        history_header = history_table.horizontalHeader()
+        history_header.setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)
+        history_header.setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed)
+        history_header.setSectionResizeMode(2, QHeaderView.ResizeMode.Fixed)
+        history_header.setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)
+        history_header.setSectionResizeMode(4, QHeaderView.ResizeMode.Fixed)
+        history_table.setColumnWidth(0, 90)
+        history_table.setColumnWidth(1, 60)
+        history_table.setColumnWidth(2, 100)
+        history_table.setColumnWidth(4, 120)
+        
+        # İşlemleri tabloya ekle
+        history_table.setRowCount(len(self.transactions))
+        for row, trans in enumerate(self.transactions):
+            date_item = QTableWidgetItem(trans.transaction_date.strftime("%d.%m.%Y"))
+            history_table.setItem(row, 0, date_item)
+            
+            type_text = "Gelir" if trans.is_income else "Gider"
+            type_item = QTableWidgetItem(type_text)
+            if trans.is_income:
+                type_item.setForeground(QColor(COLORS.SUCCESS))
+            else:
+                type_item.setForeground(QColor(COLORS.DANGER))
+            history_table.setItem(row, 1, type_item)
+            
+            history_table.setItem(row, 2, QTableWidgetItem(trans.category or "-"))
+            history_table.setItem(row, 3, QTableWidgetItem(trans.description or "-"))
+            
+            currency = CURRENCIES.get(trans.currency)
+            symbol = currency.symbol if currency else ""
+            amount_text = f"{symbol}{trans.amount:,.2f}"
+            amount_item = QTableWidgetItem(amount_text)
+            if trans.is_income:
+                amount_item.setForeground(QColor(COLORS.SUCCESS))
+            else:
+                amount_item.setForeground(QColor(COLORS.DANGER))
+            history_table.setItem(row, 4, amount_item)
+        
+        layout.addWidget(history_table)
+        
+        # Kapat butonu
+        close_btn = QPushButton("Kapat")
+        close_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {COLORS.PRIMARY};
+                padding: 12px 24px;
+                font-size: 14px;
+                border-radius: 8px;
+            }}
+            QPushButton:hover {{
+                background-color: {COLORS.PRIMARY_HOVER};
+            }}
+        """)
+        close_btn.clicked.connect(self.accept)
+        layout.addWidget(close_btn)
 
 
 class AccountsView(QWidget):
@@ -151,6 +273,7 @@ class AccountsView(QWidget):
         layout.setSpacing(16)
         layout.setContentsMargins(20, 20, 20, 20)
         
+        title_layout = QHBoxLayout()
         self.detail_title = QLabel("Hesap Detayları")
         self.detail_title.setStyleSheet(f"""
             font-size: 18px;
@@ -158,7 +281,24 @@ class AccountsView(QWidget):
             color: {COLORS.TEXT_PRIMARY};
             border: none;
         """)
-        layout.addWidget(self.detail_title)
+        title_layout.addWidget(self.detail_title)
+        title_layout.addStretch()
+        
+        self.info_btn = QPushButton("Detay")
+        self.info_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {COLORS.PRIMARY};
+                padding: 6px 12px;
+                font-size: 12px;
+                border-radius: 6px;
+            }}
+            QPushButton:hover {{
+                background-color: {COLORS.PRIMARY_HOVER};
+            }}
+        """)
+        self.info_btn.clicked.connect(self._show_info_dialog)
+        title_layout.addWidget(self.info_btn)
+        layout.addLayout(title_layout)
         
         name_label = QLabel("Hesap Adı")
         name_label.setStyleSheet(f"color: {COLORS.TEXT_SECONDARY}; font-size: 12px; border: none;")
@@ -235,6 +375,15 @@ class AccountsView(QWidget):
         
         return panel
     
+    def _show_info_dialog(self) -> None:
+        """Hesap bilgi dialog'unu gösterir."""
+        if not self._selected_account:
+            return
+        
+        transactions = self.controller.get_transactions_by_account(self._selected_account.id)
+        dialog = AccountInfoDialog(self, self._selected_account, transactions)
+        dialog.exec()
+    
     def _set_detail_enabled(self, enabled: bool) -> None:
         """Detay panelini etkinleştirir/devre dışı bırakır."""
         self.detail_name.setEnabled(enabled)
@@ -242,6 +391,7 @@ class AccountsView(QWidget):
         self.detail_currency.setEnabled(enabled)
         self.save_btn.setEnabled(enabled)
         self.delete_btn.setEnabled(enabled)
+        self.info_btn.setEnabled(enabled)
         
         if not enabled:
             self.detail_name.clear()

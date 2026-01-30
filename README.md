@@ -41,6 +41,13 @@ pyinstaller build.spec --clean --noconfirm
 ```
 Çıktı: `dist/MoneyHandler.app` (macOS) veya `dist/MoneyHandler.exe` (Windows)
 
+### Deploy (macOS)
+Uygulamayı derleyip Applications klasörüne tek komutla yüklemek için:
+```bash
+./deploy.sh
+```
+> **Not:** Verileriniz `~/.moneyhandler/` klasöründe saklanır, deploy sırasında kaybolmaz.
+
 ## Teknoloji
 
 | Teknoloji | Kullanım |
