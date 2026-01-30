@@ -5,26 +5,38 @@
 </p>
 
 <p align="center">
-  <b>Kişisel Finans Yönetimi Uygulaması</b><br>
-  Gelir, gider ve hesaplarınızı kolayca takip edin
+  <b>Personal Finance Management App</b><br>
+  Track your income, expenses, and accounts with ease
 </p>
 
 ---
-## Purpose
 
-I made that app fully on python according to my needing
+## Why I Built This
 
-## Özellikler
+Most finance apps out there are either too complex or packed with features I don't need. I just wanted something simple: see my accounts, track how much I spend, and know about upcoming payments. So I built this app with Python to fit my own needs.
 
-- **Çoklu Para Birimi** - TRY, USD, EUR desteği
-- **Hesap Yönetimi** - Banka, nakit, kredi kartı hesapları
-- **Gelir/Gider Takibi** - Kategorili işlem kaydı
-- **Planlanan İşlemler** - Gelecek ödemeleri takip edin
-- **Inline Düzenleme** - Split-pane detay paneli ile hızlı düzenleme
+It works completely offline. Your data stays on your computer. No cloud, no sign-up, no ads.
 
-## Kurulum
+## Features
 
-### Geliştirme
+### Account Management
+Add different account types like bank accounts, cash, or credit cards. Track each account's balance separately and see your total assets at a glance.
+
+### Income and Expense Tracking
+Record every transaction with category, description, and date. Use filters to see how much you spent on each category. Sort your transactions by date, amount, or category.
+
+### Weekly View
+View your weekly spending from Monday to Sunday in a calendar format. Each day shows income and expenses separately. Summary cards at the top display daily average spending and weekly totals. Use the category filter to include or exclude specific categories from average calculations.
+
+### Planned Transactions
+Schedule recurring income and expenses like rent, bills, or salary. Upcoming payments automatically appear on the Dashboard.
+
+### Multi-Currency Support
+Supports TRY, USD, and EUR currencies. Use the currency selector on Dashboard and Weekly view to display amounts in your preferred currency. Conversion happens automatically.
+
+## Installation
+
+### Development
 ```bash
 git clone https://github.com/bilalyazicioglu/moneyhandler.git
 cd moneyhandler
@@ -34,43 +46,43 @@ pip install -r requirements.txt
 python main.py
 ```
 
-### Build (Executable Oluşturma)
+### Build as Standalone App
 ```bash
 pip install pyinstaller
 pyinstaller build.spec --clean --noconfirm
 ```
-Çıktı: `dist/MoneyHandler.app` (macOS) veya `dist/MoneyHandler.exe` (Windows)
+Output: `dist/MoneyHandler.app` (macOS) or `dist/MoneyHandler.exe` (Windows)
 
-### Deploy (macOS)
-Uygulamayı derleyip Applications klasörüne tek komutla yüklemek için:
+### Quick Deploy (macOS)
+Build and install to Applications folder with a single command:
 ```bash
 ./deploy.sh
 ```
-> **Not:** Verileriniz `~/.moneyhandler/` klasöründe saklanır, deploy sırasında kaybolmaz.
+Your data is stored in `~/.moneyhandler/` and persists across app updates.
 
-## Teknoloji
+## Tech Stack
 
-| Teknoloji | Kullanım |
-|-----------|----------|
-| Python 3 | Backend |
-| PyQt6 | GUI Framework |
-| SQLite | Veritabanı |
-| PyInstaller | Executable Build |
+| Technology | Purpose |
+|------------|---------|
+| Python 3 | Core language |
+| PyQt6 | Desktop GUI |
+| SQLite | Local database |
+| PyInstaller | Standalone builds |
 
-## Proje Yapısı
+## Project Structure
 
 ```
 moneyhandler/
-├── main.py              # Uygulama giriş noktası
-├── config.py            # Ayarlar ve sabitler
-├── assets/              # Logo ve ikonlar
-├── controllers/         # İş mantığı
-├── models/              # Veri modelleri
-├── views/               # PyQt6 arayüzleri
-├── data/                # Veritabanı işlemleri
-└── build.spec           # PyInstaller yapılandırması
+├── main.py              # App entry point
+├── config.py            # Settings, colors, currencies
+├── assets/              # Logo and icons
+├── controllers/         # Business logic
+├── models/              # Database models
+├── views/               # PyQt6 UI components
+├── data/                # Database connection
+└── build.spec           # PyInstaller config
 ```
 
-## Lisans
+## License
 
-MIT License - Detaylar için [LICENSE](LICENSE) dosyasına bakın.
+MIT License - See [LICENSE](LICENSE) for details.
