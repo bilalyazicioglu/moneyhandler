@@ -30,6 +30,7 @@ from views.dashboard_view import DashboardView
 from views.accounts_view import AccountsView
 from views.transactions_view import TransactionsView
 from views.planned_items_view import PlannedItemsView
+from views.weekly_spending_view import WeeklySpendingView
 
 import sys
 import os
@@ -132,6 +133,9 @@ class MainWindow(QMainWindow):
         self.planned_items_view = PlannedItemsView(self.controller)
         self.tab_widget.addTab(self.planned_items_view, "Planlanan")
         
+        self.weekly_spending_view = WeeklySpendingView(self.controller)
+        self.tab_widget.addTab(self.weekly_spending_view, "Haftalık")
+        
         layout.addWidget(self.tab_widget)
         
         self.status_bar = QStatusBar()
@@ -171,6 +175,7 @@ class MainWindow(QMainWindow):
         self.accounts_view.refresh()
         self.transactions_view.refresh()
         self.planned_items_view.refresh()
+        self.weekly_spending_view.refresh()
     
     def _update_status_bar(self) -> None:
         """Durum çubuğunu günceller."""

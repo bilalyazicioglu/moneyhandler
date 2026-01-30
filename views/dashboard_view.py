@@ -19,7 +19,8 @@ from PyQt6.QtWidgets import (
     QHeaderView,
     QGroupBox,
     QFrame,
-    QGraphicsDropShadowEffect
+    QGraphicsDropShadowEffect,
+    QComboBox
 )
 from PyQt6.QtGui import QColor
 
@@ -29,6 +30,7 @@ from config import (
     EXCHANGE_RATES,
     BASE_CURRENCY,
     convert_to_base_currency,
+    convert_currency,
     UPCOMING_DAYS_THRESHOLD,
     TransactionType
 )
@@ -60,6 +62,7 @@ class DashboardView(QWidget):
         """
         super().__init__(parent)
         self.controller = controller
+        self.display_currency = BASE_CURRENCY
         self._setup_ui()
     
     def _setup_ui(self) -> None:
@@ -87,7 +90,30 @@ class DashboardView(QWidget):
         """)
         header_layout.addWidget(subtitle)
         
-        layout.addLayout(header_layout)
+        title_row = QHBoxLayout()
+        title_row.addLayout(header_layout)
+        title_row.addStretch()
+        
+        currency_layout = QHBoxLayout()
+        currency_layout.setSpacing(8)
+        
+        currency_label = QLabel("Para Birimi:")
+        currency_label.setStyleSheet(f"""
+            font-size: 13px;
+            color: {COLORS.TEXT_SECONDARY};
+        """)
+        currency_layout.addWidget(currency_label)
+        
+        self.currency_combo = QComboBox()
+        for code, currency in CURRENCIES.items():
+            self.currency_combo.addItem(f"{currency.symbol} {code}", code)
+        self.currency_combo.setCurrentText(f"{CURRENCIES[BASE_CURRENCY].symbol} {BASE_CURRENCY}")
+        self.currency_combo.currentIndexChanged.connect(self._on_currency_changed)
+        self.currency_combo.setMinimumWidth(120)
+        currency_layout.addWidget(self.currency_combo)
+        
+        title_row.addLayout(currency_layout)
+        layout.addLayout(title_row)
         
         cards_layout = QHBoxLayout()
         cards_layout.setSpacing(20)
@@ -261,24 +287,32 @@ class DashboardView(QWidget):
         self._update_upcoming_table()
         self._update_recent_table()
     
+    def _on_currency_changed(self) -> None:
+        """Para birimi değiştiğinde çağrılır."""
+        self.display_currency = self.currency_combo.currentData()
+        self.refresh()
+    
     def _update_summary_cards(self) -> None:
         """Özet kartlarını günceller."""
         total_in_try = self.controller.get_total_assets_in_base_currency()
-        symbol = CURRENCIES[BASE_CURRENCY].symbol
+        total_in_display = convert_currency(total_in_try, BASE_CURRENCY, self.display_currency)
+        symbol = CURRENCIES[self.display_currency].symbol
         
         value_label = self.total_card.findChild(QLabel, "value")
         if value_label:
-            value_label.setText(f"{symbol}{total_in_try:,.2f}")
+            value_label.setText(f"{symbol}{total_in_display:,.2f}")
         
         summary = self.controller.get_transaction_summary()
+        income_in_display = convert_currency(summary['income'], BASE_CURRENCY, self.display_currency)
+        expense_in_display = convert_currency(summary['expense'], BASE_CURRENCY, self.display_currency)
         
         income_label = self.income_card.findChild(QLabel, "value")
         if income_label:
-            income_label.setText(f"{symbol}{summary['income']:,.2f}")
+            income_label.setText(f"{symbol}{income_in_display:,.2f}")
         
         expense_label = self.expense_card.findChild(QLabel, "value")
         if expense_label:
-            expense_label.setText(f"{symbol}{summary['expense']:,.2f}")
+            expense_label.setText(f"{symbol}{expense_in_display:,.2f}")
     
     def _update_upcoming_table(self) -> None:
         """Yaklaşan ödemeler tablosunu günceller."""
@@ -295,8 +329,9 @@ class DashboardView(QWidget):
             desc = item.description or item.category or "-"
             self.upcoming_table.setItem(row, 1, QTableWidgetItem(desc))
             
-            symbol = CURRENCIES[item.currency].symbol
-            amount_text = f"{symbol}{item.amount:,.2f}"
+            symbol = CURRENCIES[self.display_currency].symbol
+            amount_in_display = convert_currency(item.amount, item.currency, self.display_currency)
+            amount_text = f"{symbol}{amount_in_display:,.2f}"
             amount_item = QTableWidgetItem(amount_text)
             if item.is_expense:
                 amount_item.setForeground(QColor(COLORS.DANGER))
@@ -326,12 +361,13 @@ class DashboardView(QWidget):
             
             self.recent_table.setItem(row, 3, QTableWidgetItem(trans.description or "-"))
             
-            symbol = CURRENCIES[trans.currency].symbol
+            symbol = CURRENCIES[self.display_currency].symbol
+            amount_in_display = convert_currency(trans.amount, trans.currency, self.display_currency)
             if trans.is_income:
-                amount_text = f"+{symbol}{trans.amount:,.2f}"
+                amount_text = f"+{symbol}{amount_in_display:,.2f}"
                 color = COLORS.SUCCESS
             else:
-                amount_text = f"-{symbol}{trans.amount:,.2f}"
+                amount_text = f"-{symbol}{amount_in_display:,.2f}"
                 color = COLORS.DANGER
             
             amount_item = QTableWidgetItem(amount_text)

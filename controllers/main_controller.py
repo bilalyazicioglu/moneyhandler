@@ -5,7 +5,7 @@ UI ve Model katmanları arasındaki iş mantığı köprüsü.
 Tüm veri işlemlerini yönetir ve view'lara veri sağlar.
 """
 
-from datetime import date
+from datetime import date, timedelta
 from typing import List, Optional, Dict
 
 from config import (
@@ -246,6 +246,72 @@ class MainController:
             'expense': expense_total
         }
     
+    def get_transactions_by_date_range(
+        self,
+        start_date: date,
+        end_date: date
+    ) -> List[Transaction]:
+        """
+        Tarih aralığındaki işlemleri getirir.
+        
+        Args:
+            start_date: Başlangıç tarihi
+            end_date: Bitiş tarihi
+            
+        Returns:
+            İşlem listesi
+        """
+        return self._transaction_repo.get_by_date_range(start_date, end_date)
+    
+    def get_weekly_spending_data(self) -> Dict:
+        """
+        Bu haftanın harcama verilerini döndürür.
+        
+        Pazartesi'den bugüne kadar olan giderleri hesaplar.
+        Tüm tutarlar TRY'ye çevrilir.
+        
+        Returns:
+            {
+                'daily_spending': {0: [...], 1: [...], ...},  # 0=Pazartesi, Transaction listesi
+                'daily_totals': [0.0, 0.0, ...],  # 7 günlük toplam (TRY)
+                'weekly_total': float,  # Haftalık toplam (TRY)
+                'daily_average': float,  # Günlük ortalama (TRY)
+                'week_start': date,  # Pazartesi
+                'week_end': date  # Pazar
+            }
+        """
+        today = date.today()
+        weekday = today.weekday()
+        week_start = today - timedelta(days=weekday)
+        week_end = week_start + timedelta(days=6)
+        
+        transactions = self._transaction_repo.get_by_date_range(week_start, week_end)
+        
+        daily_spending: Dict[int, List[Transaction]] = {i: [] for i in range(7)}
+        daily_totals = [0.0] * 7
+        
+        for trans in transactions:
+            if trans.is_expense:
+                day_index = trans.transaction_date.weekday()
+                if 0 <= day_index <= 6:
+                    daily_spending[day_index].append(trans)
+                    amount_in_try = convert_to_base_currency(trans.amount, trans.currency)
+                    daily_totals[day_index] += amount_in_try
+        
+        weekly_total = sum(daily_totals)
+        
+        days_passed = weekday + 1
+        daily_average = weekly_total / days_passed if days_passed > 0 else 0.0
+        
+        return {
+            'daily_spending': daily_spending,
+            'daily_totals': daily_totals,
+            'weekly_total': weekly_total,
+            'daily_average': daily_average,
+            'week_start': week_start,
+            'week_end': week_end
+        }
+
 
     def get_all_planned_items(self) -> List[PlannedItem]:
         """
