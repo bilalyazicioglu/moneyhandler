@@ -29,7 +29,8 @@ from PyQt6.QtGui import QColor
 from PyQt6.QtCore import QDate
 
 from config import COLORS, CURRENCIES
-from models.planned_item import PlannedItem
+from models.planned_item import PlannedItem, PlannedItemRepository
+from models.transaction import TransactionRepository
 from views.forms import PlannedItemDialog
 
 if TYPE_CHECKING:
@@ -512,7 +513,11 @@ class PlannedItemsView(QWidget):
             )
             return
         
-        dialog = PlannedItemDialog(self, accounts=accounts)
+        trans_categories = TransactionRepository().get_distinct_categories()
+        planned_categories = PlannedItemRepository().get_distinct_categories()
+        all_categories = sorted(set(trans_categories + planned_categories))
+        
+        dialog = PlannedItemDialog(self, accounts=accounts, categories=all_categories)
         if dialog.exec():
             planned_item = dialog.get_data()
             self.controller.create_planned_item(planned_item)
@@ -527,7 +532,11 @@ class PlannedItemsView(QWidget):
             item: Düzenlenecek planlanan işlem
         """
         accounts = self.controller.get_all_accounts()
-        dialog = PlannedItemDialog(self, item, accounts)
+        trans_categories = TransactionRepository().get_distinct_categories()
+        planned_categories = PlannedItemRepository().get_distinct_categories()
+        all_categories = sorted(set(trans_categories + planned_categories))
+        
+        dialog = PlannedItemDialog(self, item, accounts, all_categories)
         if dialog.exec():
             updated_item = dialog.get_data()
             self.controller.update_planned_item(updated_item)

@@ -244,6 +244,21 @@ class PlannedItemRepository:
         row = self._db.fetch_one(query, (end_date.isoformat(),))
         return row["total"] if row and row["total"] else 0.0
     
+    def get_distinct_categories(self) -> List[str]:
+        """
+        Tüm benzersiz kategorileri getirir.
+        
+        Returns:
+            Kategori listesi (alfabetik sıralı)
+        """
+        query = """
+            SELECT DISTINCT category FROM planned_items 
+            WHERE category IS NOT NULL AND category != ''
+            ORDER BY category
+        """
+        rows = self._db.fetch_all(query)
+        return [row["category"] for row in rows]
+    
     def _row_to_planned_item(self, row) -> PlannedItem:
         """
         Veritabanı satırını PlannedItem nesnesine dönüştürür.

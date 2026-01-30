@@ -206,7 +206,8 @@ class TransactionDialog(QDialog):
         self,
         parent=None,
         transaction: Optional[Transaction] = None,
-        accounts: List[Account] = None
+        accounts: List[Account] = None,
+        categories: List[str] = None
     ) -> None:
         """
         Dialog başlatıcısı.
@@ -215,10 +216,12 @@ class TransactionDialog(QDialog):
             parent: Üst widget
             transaction: Düzenlenecek işlem (opsiyonel)
             accounts: Hesap listesi
+            categories: Mevcut kategori listesi
         """
         super().__init__(parent)
         self.transaction = transaction
         self.accounts = accounts or []
+        self.categories = categories or []
         self._setup_ui()
         self._load_data()
     
@@ -281,8 +284,12 @@ class TransactionDialog(QDialog):
         self.date_input.setDate(QDate.currentDate())
         form_layout.addRow("Tarih", self.date_input)
         
-        self.category_input = QLineEdit()
-        self.category_input.setPlaceholderText("Örn: Maaş, Kira, Market")
+        self.category_input = QComboBox()
+        self.category_input.setEditable(True)
+        self.category_input.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
+        self.category_input.addItems(self.categories)
+        self.category_input.setCurrentText("")
+        self.category_input.lineEdit().setPlaceholderText("Örn: Maaş, Kira, Market")
         form_layout.addRow("Kategori", self.category_input)
         
         self.description_input = QTextEdit()
@@ -363,7 +370,7 @@ class TransactionDialog(QDialog):
             self.transaction.transaction_date.day
         ))
         
-        self.category_input.setText(self.transaction.category)
+        self.category_input.setCurrentText(self.transaction.category)
         self.description_input.setPlainText(self.transaction.description)
     
     def _on_save(self) -> None:
@@ -410,7 +417,7 @@ class TransactionDialog(QDialog):
             transaction_type=self.type_combo.currentData(),
             amount=amount,
             currency=account_currency,
-            category=self.category_input.text().strip(),
+            category=self.category_input.currentText().strip(),
             description=self.description_input.toPlainText().strip(),
             transaction_date=trans_date
         )
@@ -429,7 +436,8 @@ class PlannedItemDialog(QDialog):
         self,
         parent=None,
         planned_item: Optional[PlannedItem] = None,
-        accounts: List[Account] = None
+        accounts: List[Account] = None,
+        categories: List[str] = None
     ) -> None:
         """
         Dialog başlatıcısı.
@@ -438,10 +446,12 @@ class PlannedItemDialog(QDialog):
             parent: Üst widget
             planned_item: Düzenlenecek planlanan işlem (opsiyonel)
             accounts: Hesap listesi
+            categories: Mevcut kategori listesi
         """
         super().__init__(parent)
         self.planned_item = planned_item
         self.accounts = accounts or []
+        self.categories = categories or []
         self._setup_ui()
         self._load_data()
     
@@ -510,8 +520,12 @@ class PlannedItemDialog(QDialog):
         self.date_input.setDate(QDate.currentDate())
         form_layout.addRow("Planlanan Tarih", self.date_input)
         
-        self.category_input = QLineEdit()
-        self.category_input.setPlaceholderText("Örn: Maaş, Kira, Fatura")
+        self.category_input = QComboBox()
+        self.category_input.setEditable(True)
+        self.category_input.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
+        self.category_input.addItems(self.categories)
+        self.category_input.setCurrentText("")
+        self.category_input.lineEdit().setPlaceholderText("Örn: Maaş, Kira, Fatura")
         form_layout.addRow("Kategori", self.category_input)
         
         self.description_input = QTextEdit()
@@ -580,7 +594,7 @@ class PlannedItemDialog(QDialog):
             self.planned_item.planned_date.day
         ))
         
-        self.category_input.setText(self.planned_item.category)
+        self.category_input.setCurrentText(self.planned_item.category)
         self.description_input.setPlainText(self.planned_item.description)
     
     def _on_save(self) -> None:
@@ -611,7 +625,7 @@ class PlannedItemDialog(QDialog):
             transaction_type=self.type_combo.currentData(),
             amount=self.amount_input.value(),
             currency=self.currency_combo.currentData(),
-            category=self.category_input.text().strip(),
+            category=self.category_input.currentText().strip(),
             description=self.description_input.toPlainText().strip(),
             planned_date=plan_date
         )

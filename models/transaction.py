@@ -256,6 +256,21 @@ class TransactionRepository:
         cursor = self._db.execute(query, (transaction_id,))
         return cursor.rowcount > 0
     
+    def get_distinct_categories(self) -> List[str]:
+        """
+        Tüm benzersiz kategorileri getirir.
+        
+        Returns:
+            Kategori listesi (alfabetik sıralı)
+        """
+        query = """
+            SELECT DISTINCT category FROM transactions 
+            WHERE category IS NOT NULL AND category != ''
+            ORDER BY category
+        """
+        rows = self._db.fetch_all(query)
+        return [row["category"] for row in rows]
+    
     def get_summary_by_type(self) -> dict:
         """
         Tip bazında toplam tutarları hesaplar.

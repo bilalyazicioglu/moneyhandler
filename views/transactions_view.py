@@ -29,7 +29,7 @@ from PyQt6.QtGui import QColor
 from PyQt6.QtCore import QDate
 
 from config import COLORS, CURRENCIES, TransactionType
-from models.transaction import Transaction
+from models.transaction import Transaction, TransactionRepository
 from views.forms import TransactionDialog
 
 if TYPE_CHECKING:
@@ -526,7 +526,8 @@ class TransactionsView(QWidget):
             )
             return
         
-        dialog = TransactionDialog(self, accounts=accounts)
+        categories = TransactionRepository().get_distinct_categories()
+        dialog = TransactionDialog(self, accounts=accounts, categories=categories)
         if dialog.exec():
             transaction = dialog.get_data()
             self.controller.create_transaction(transaction)
@@ -541,7 +542,8 @@ class TransactionsView(QWidget):
             transaction: Düzenlenecek işlem
         """
         accounts = self.controller.get_all_accounts()
-        dialog = TransactionDialog(self, transaction, accounts)
+        categories = TransactionRepository().get_distinct_categories()
+        dialog = TransactionDialog(self, transaction, accounts, categories)
         if dialog.exec():
             updated_transaction = dialog.get_data()
             self.controller.update_transaction(transaction, updated_transaction)

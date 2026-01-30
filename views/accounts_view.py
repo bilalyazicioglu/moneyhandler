@@ -41,10 +41,11 @@ class AccountInfoDialog(QDialog):
     Hesap bilgi ve işlem geçmişi popup dialog'u.
     """
     
-    def __init__(self, parent, account: Account, transactions: list) -> None:
+    def __init__(self, parent, account: Account, transactions: list, controller=None) -> None:
         super().__init__(parent)
         self.account = account
         self.transactions = transactions
+        self.controller = controller
         self._setup_ui()
     
     def _setup_ui(self) -> None:
@@ -71,11 +72,11 @@ class AccountInfoDialog(QDialog):
         desc_label.setStyleSheet(f"color: {COLORS.TEXT_SECONDARY}; font-size: 12px; margin-top: 8px;")
         layout.addWidget(desc_label)
         
-        description_text = QTextEdit()
-        description_text.setReadOnly(True)
-        description_text.setMaximumHeight(80)
-        description_text.setText(self.account.description if self.account.description else "Açıklama yok.")
-        description_text.setStyleSheet(f"""
+        self.description_text = QTextEdit()
+        self.description_text.setMaximumHeight(80)
+        self.description_text.setText(self.account.description if self.account.description else "")
+        self.description_text.setPlaceholderText("Hesap açıklaması girin...")
+        self.description_text.setStyleSheet(f"""
             QTextEdit {{
                 background-color: {COLORS.BG_ELEVATED};
                 border: 1px solid {COLORS.BORDER};
@@ -84,7 +85,7 @@ class AccountInfoDialog(QDialog):
                 color: {COLORS.TEXT_PRIMARY};
             }}
         """)
-        layout.addWidget(description_text)
+        layout.addWidget(self.description_text)
         
         # İşlem geçmişi bölümü
         history_label = QLabel(f"İşlem Geçmişi ({len(self.transactions)} işlem)")
@@ -139,6 +140,25 @@ class AccountInfoDialog(QDialog):
         
         layout.addWidget(history_table)
         
+        # Buton layout
+        btn_layout = QHBoxLayout()
+        
+        # Kaydet butonu
+        save_btn = QPushButton("Kaydet")
+        save_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {COLORS.SUCCESS};
+                padding: 12px 24px;
+                font-size: 14px;
+                border-radius: 8px;
+            }}
+            QPushButton:hover {{
+                background-color: {COLORS.SUCCESS_LIGHT};
+            }}
+        """)
+        save_btn.clicked.connect(self._on_save)
+        btn_layout.addWidget(save_btn)
+        
         # Kapat butonu
         close_btn = QPushButton("Kapat")
         close_btn.setStyleSheet(f"""
@@ -153,7 +173,20 @@ class AccountInfoDialog(QDialog):
             }}
         """)
         close_btn.clicked.connect(self.accept)
-        layout.addWidget(close_btn)
+        btn_layout.addWidget(close_btn)
+        
+        layout.addLayout(btn_layout)
+    
+    def _on_save(self) -> None:
+        """Açıklamayı kaydeder."""
+        new_description = self.description_text.toPlainText().strip()
+        self.account.description = new_description
+        
+        if self.controller:
+            self.controller.update_account(self.account)
+            QMessageBox.information(self, "Başarılı", "Açıklama kaydedildi!")
+        else:
+            QMessageBox.warning(self, "Uyarı", "Değişiklik kaydedilemedi.")
 
 
 class AccountsView(QWidget):
@@ -381,8 +414,9 @@ class AccountsView(QWidget):
             return
         
         transactions = self.controller.get_transactions_by_account(self._selected_account.id)
-        dialog = AccountInfoDialog(self, self._selected_account, transactions)
+        dialog = AccountInfoDialog(self, self._selected_account, transactions, self.controller)
         dialog.exec()
+        self.refresh()
     
     def _set_detail_enabled(self, enabled: bool) -> None:
         """Detay panelini etkinleştirir/devre dışı bırakır."""
