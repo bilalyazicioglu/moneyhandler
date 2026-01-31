@@ -20,7 +20,8 @@ from PyQt6.QtWidgets import (
     QSizePolicy,
     QComboBox,
     QCheckBox,
-    QGroupBox
+    QGroupBox,
+    QPushButton
 )
 
 from config import (
@@ -180,7 +181,13 @@ class WeeklySpendingView(QWidget):
         self.display_currency = BASE_CURRENCY
         self.selected_categories: Set[str] = set()
         self.category_checkboxes: Dict[str, QCheckBox] = {}
+        self._init_current_week()
         self._setup_ui()
+    
+    def _init_current_week(self) -> None:
+        """Mevcut haftayı başlatır."""
+        today = date.today()
+        self.current_week_start = today - timedelta(days=today.weekday())
     
     def _setup_ui(self) -> None:
         """UI bileşenlerini oluşturur."""
@@ -209,7 +216,90 @@ class WeeklySpendingView(QWidget):
         title_layout.addWidget(self.date_range_label)
         
         header_layout.addLayout(title_layout)
+        
+        nav_layout = QHBoxLayout()
+        nav_layout.setSpacing(4)
+        
+        self.prev_week_btn = QPushButton("❮")
+        self.prev_week_btn.setFixedSize(36, 36)
+        self.prev_week_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.prev_week_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {COLORS.BG_ELEVATED};
+                border: 1px solid {COLORS.BORDER};
+                border-radius: 8px;
+                color: {COLORS.TEXT_PRIMARY};
+                font-size: 16px;
+                font-weight: bold;
+                font-family: Arial, sans-serif;
+                padding: 0px;
+                text-align: center;
+            }}
+            QPushButton:hover {{
+                background-color: {COLORS.BG_INPUT};
+                border-color: {COLORS.PRIMARY};
+            }}
+            QPushButton:pressed {{
+                background-color: {COLORS.PRIMARY};
+            }}
+        """)
+        self.prev_week_btn.clicked.connect(self._go_to_prev_week)
+        nav_layout.addWidget(self.prev_week_btn)
+        
+        self.today_btn = QPushButton("Bugün")
+        self.today_btn.setFixedHeight(36)
+        self.today_btn.setMinimumWidth(80)
+        self.today_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.today_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {COLORS.BG_ELEVATED};
+                border: 1px solid {COLORS.BORDER};
+                border-radius: 8px;
+                color: {COLORS.TEXT_PRIMARY};
+                font-size: 13px;
+                font-weight: 600;
+                padding: 0 16px;
+            }}
+            QPushButton:hover {{
+                background-color: {COLORS.BG_INPUT};
+                border-color: {COLORS.PRIMARY};
+            }}
+            QPushButton:pressed {{
+                background-color: {COLORS.PRIMARY};
+            }}
+        """)
+        self.today_btn.clicked.connect(self._go_to_today)
+        nav_layout.addWidget(self.today_btn)
+        
+        self.next_week_btn = QPushButton("❯")
+        self.next_week_btn.setFixedSize(36, 36)
+        self.next_week_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.next_week_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {COLORS.BG_ELEVATED};
+                border: 1px solid {COLORS.BORDER};
+                border-radius: 8px;
+                color: {COLORS.TEXT_PRIMARY};
+                font-size: 16px;
+                font-weight: bold;
+                font-family: Arial, sans-serif;
+                padding: 0px;
+                text-align: center;
+            }}
+            QPushButton:hover {{
+                background-color: {COLORS.BG_INPUT};
+                border-color: {COLORS.PRIMARY};
+            }}
+            QPushButton:pressed {{
+                background-color: {COLORS.PRIMARY};
+            }}
+        """)
+        self.next_week_btn.clicked.connect(self._go_to_next_week)
+        nav_layout.addWidget(self.next_week_btn)
+        
         header_layout.addStretch()
+        header_layout.addLayout(nav_layout)
+        header_layout.addSpacing(16)
         
         currency_layout = QHBoxLayout()
         currency_layout.setSpacing(8)
@@ -354,6 +444,22 @@ class WeeklySpendingView(QWidget):
         
         return card
     
+    def _go_to_prev_week(self) -> None:
+        """Önceki haftaya geçer."""
+        self.current_week_start -= timedelta(days=7)
+        self.refresh()
+    
+    def _go_to_next_week(self) -> None:
+        """Sonraki haftaya geçer."""
+        self.current_week_start += timedelta(days=7)
+        self.refresh()
+    
+    def _go_to_today(self) -> None:
+        """Bugünün haftasına döner."""
+        today = date.today()
+        self.current_week_start = today - timedelta(days=today.weekday())
+        self.refresh()
+    
     def _on_currency_changed(self) -> None:
         """Para birimi değiştiğinde çağrılır."""
         self.display_currency = self.currency_combo.currentData()
@@ -412,9 +518,8 @@ class WeeklySpendingView(QWidget):
     
     def _update_averages(self) -> None:
         """Ortalama değerlerini seçili kategorilere göre günceller."""
-        data = self.controller.get_weekly_spending_data()
-        week_start = data['week_start']
-        week_end = data['week_end']
+        week_start = self.current_week_start
+        week_end = week_start + timedelta(days=6)
         
         all_transactions = self.controller.get_transactions_by_date_range(week_start, week_end)
         
@@ -453,15 +558,25 @@ class WeeklySpendingView(QWidget):
     
     def refresh(self) -> None:
         """Haftalık verileri yeniler."""
-        data = self.controller.get_weekly_spending_data()
+        data = self.controller.get_weekly_spending_data_for_week(self.current_week_start)
         
         symbol = CURRENCIES[self.display_currency].symbol
         
         week_start = data['week_start']
         week_end = data['week_end']
-        self.date_range_label.setText(
-            f"{week_start.strftime('%d %B %Y')} - {week_end.strftime('%d %B %Y')}"
-        )
+        
+        today = date.today()
+        today_week_start = today - timedelta(days=today.weekday())
+        is_current_week = (self.current_week_start == today_week_start)
+        
+        if is_current_week:
+            self.date_range_label.setText(
+                f"Bu hafta • {week_start.strftime('%d %B')} - {week_end.strftime('%d %B %Y')}"
+            )
+        else:
+            self.date_range_label.setText(
+                f"{week_start.strftime('%d %B')} - {week_end.strftime('%d %B %Y')}"
+            )
         
         today = date.today()
         days_passed = today.weekday() + 1

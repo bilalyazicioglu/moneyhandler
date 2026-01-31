@@ -311,6 +311,53 @@ class MainController:
             'week_start': week_start,
             'week_end': week_end
         }
+    
+    def get_weekly_spending_data_for_week(self, week_start_date: date) -> Dict:
+        """
+        Belirli bir haftanın harcama verilerini döndürür.
+        
+        Args:
+            week_start_date: Haftanın başlangıç tarihi (Pazartesi)
+            
+        Returns:
+            Haftalık harcama verileri dictionary'si
+        """
+        week_start = week_start_date
+        week_end = week_start + timedelta(days=6)
+        
+        transactions = self._transaction_repo.get_by_date_range(week_start, week_end)
+        
+        daily_spending: Dict[int, List[Transaction]] = {i: [] for i in range(7)}
+        daily_totals = [0.0] * 7
+        
+        for trans in transactions:
+            if trans.is_expense:
+                day_index = trans.transaction_date.weekday()
+                if 0 <= day_index <= 6:
+                    daily_spending[day_index].append(trans)
+                    amount_in_try = convert_to_base_currency(trans.amount, trans.currency)
+                    daily_totals[day_index] += amount_in_try
+        
+        weekly_total = sum(daily_totals)
+        
+        today = date.today()
+        if week_start <= today <= week_end:
+            days_passed = today.weekday() + 1
+        elif today > week_end:
+            days_passed = 7
+        else:
+            days_passed = 0
+        
+        daily_average = weekly_total / days_passed if days_passed > 0 else 0.0
+        
+        return {
+            'daily_spending': daily_spending,
+            'daily_totals': daily_totals,
+            'weekly_total': weekly_total,
+            'daily_average': daily_average,
+            'week_start': week_start,
+            'week_end': week_end
+        }
 
 
     def get_all_planned_items(self) -> List[PlannedItem]:
