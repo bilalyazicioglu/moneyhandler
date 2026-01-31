@@ -34,6 +34,9 @@ Schedule recurring income and expenses like rent, bills, or salary. Upcoming pay
 ### Multi-Currency Support
 Supports TRY, USD, and EUR currencies. Use the currency selector on Dashboard and Weekly view to display amounts in your preferred currency. Conversion happens automatically.
 
+### Multi-Language Support
+Available in Turkish and English. Change the language anytime from the Settings tab. Your preference is saved automatically and persists across app restarts.
+
 ## Installation
 
 ### Development

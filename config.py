@@ -458,7 +458,20 @@ def get_stylesheet() -> str:
 
 
 # Dil Ayarları / Language Settings
-CURRENT_LANGUAGE: str = "tr"  # "tr" veya "en"
+def _load_language_setting() -> str:
+    """Kaydedilmiş dil ayarını yükler."""
+    import json
+    settings_path = get_database_path().parent / "settings.json"
+    if settings_path.exists():
+        try:
+            with open(settings_path, 'r', encoding='utf-8') as f:
+                settings = json.load(f)
+                return settings.get("language", "tr")
+        except:
+            pass
+    return "tr"
+
+CURRENT_LANGUAGE: str = _load_language_setting()
 
 TRANSLATIONS = {
     "tr": {
@@ -469,6 +482,7 @@ TRANSLATIONS = {
         "tab_transactions": "İşlemler",
         "tab_planned": "Planlanan",
         "tab_weekly": "Haftalık",
+        "tab_settings": "Ayarlar",
         "status_accounts": "Hesap",
         "status_transactions": "İşlem",
         "status_planned": "Planlanan",
@@ -608,6 +622,18 @@ TRANSLATIONS = {
         "placeholder_planned_category": "Örn: Maaş, Kira, Fatura",
         "placeholder_description": "İşlem açıklaması (opsiyonel)",
         "placeholder_account_desc": "Hesap açıklaması (opsiyonel)",
+        
+        # Settings
+        "settings_title": "Ayarlar",
+        "settings_subtitle": "Uygulama tercihlerinizi yönetin",
+        "language_settings": "Dil Ayarları",
+        "select_language": "Dil Seçin:",
+        "language_restart_note": "! Dil değişikliğinin tam olarak uygulanması için uygulamayı yeniden başlatmanız gerekebilir.",
+        "about_app": "Uygulama Hakkında",
+        "version": "Sürüm",
+        "app_description": "MoneyHandler, kişisel finans yönetiminizi kolaylaştıran modern bir masaüstü uygulamasıdır.",
+        "language_changed_title": "Dil Değiştirildi",
+        "language_changed_message": "Dil ayarı kaydedildi. Değişikliklerin tam olarak uygulanması için uygulamayı yeniden başlatın.",
     },
     "en": {
         # Main Window
@@ -617,6 +643,7 @@ TRANSLATIONS = {
         "tab_transactions": "Transactions",
         "tab_planned": "Planned",
         "tab_weekly": "Weekly",
+        "tab_settings": "Settings",
         "status_accounts": "Account",
         "status_transactions": "Transaction",
         "status_planned": "Planned",
@@ -756,6 +783,18 @@ TRANSLATIONS = {
         "placeholder_planned_category": "E.g.: Salary, Rent, Bills",
         "placeholder_description": "Transaction description (optional)",
         "placeholder_account_desc": "Account description (optional)",
+        
+        # Settings
+        "settings_title": "Settings",
+        "settings_subtitle": "Manage your application preferences",
+        "language_settings": "Language Settings",
+        "select_language": "Select Language:",
+        "language_restart_note": "! You may need to restart the application for language changes to take full effect.",
+        "about_app": "About Application",
+        "version": "Version",
+        "app_description": "MoneyHandler is a modern desktop application that simplifies your personal finance management.",
+        "language_changed_title": "Language Changed",
+        "language_changed_message": "Language setting saved. Restart the application for changes to take full effect.",
     }
 }
 

@@ -32,6 +32,7 @@ from views.accounts_view import AccountsView
 from views.transactions_view import TransactionsView
 from views.planned_items_view import PlannedItemsView
 from views.weekly_spending_view import WeeklySpendingView
+from views.settings_view import SettingsView
 
 import sys
 import os
@@ -136,6 +137,9 @@ class MainWindow(QMainWindow):
         
         self.weekly_spending_view = WeeklySpendingView(self.controller)
         self.tab_widget.addTab(self.weekly_spending_view, t("tab_weekly"))
+        
+        self.settings_view = SettingsView(self.controller)
+        self.tab_widget.addTab(self.settings_view, t("tab_settings"))
         
         layout.addWidget(self.tab_widget)
         
