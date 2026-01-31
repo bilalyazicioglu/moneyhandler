@@ -533,7 +533,7 @@ class WeeklySpendingView(QWidget):
         filtered_income = 0.0
         
         for trans in all_transactions:
-            category = trans.category or t(\"general\")
+            category = trans.category or t("general")
             if category in self.selected_categories:
                 amount_in_display = convert_currency(
                     trans.amount,
