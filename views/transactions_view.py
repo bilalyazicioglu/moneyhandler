@@ -28,7 +28,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtGui import QColor
 from PyQt6.QtCore import QDate
 
-from config import COLORS, CURRENCIES, TransactionType
+from config import COLORS, CURRENCIES, TransactionType, t
 from models.transaction import Transaction, TransactionRepository
 from views.forms import TransactionDialog
 
@@ -77,7 +77,7 @@ class TransactionsView(QWidget):
         title_layout = QVBoxLayout()
         title_layout.setSpacing(4)
         
-        title = QLabel("İşlemler")
+        title = QLabel(t("transactions_title"))
         title.setStyleSheet(f"""
             font-size: 32px;
             font-weight: 700;
@@ -86,40 +86,40 @@ class TransactionsView(QWidget):
         """)
         title_layout.addWidget(title)
         
-        subtitle = QLabel("Gelir ve gider işlemlerinizi takip edin")
+        subtitle = QLabel(t("transactions_subtitle"))
         subtitle.setStyleSheet(f"color: {COLORS.TEXT_SECONDARY}; font-size: 14px;")
         title_layout.addWidget(subtitle)
         
         header_layout.addLayout(title_layout)
         header_layout.addStretch()
         
-        filter_label = QLabel("Filtre:")
+        filter_label = QLabel(f"{t('filter')}:")
         filter_label.setStyleSheet(f"color: {COLORS.TEXT_SECONDARY}; margin-right: 8px;")
         header_layout.addWidget(filter_label)
         
         self.filter_combo = QComboBox()
         self.filter_combo.setMinimumWidth(140)
-        self.filter_combo.addItem("Tümü", "all")
-        self.filter_combo.addItem("Gelirler", TransactionType.INCOME)
-        self.filter_combo.addItem("Giderler", TransactionType.EXPENSE)
+        self.filter_combo.addItem(t("all"), "all")
+        self.filter_combo.addItem(t("incomes"), TransactionType.INCOME)
+        self.filter_combo.addItem(t("expenses"), TransactionType.EXPENSE)
         self.filter_combo.currentIndexChanged.connect(self.refresh)
         header_layout.addWidget(self.filter_combo)
         
         header_layout.addSpacing(12)
         
-        search_label = QLabel("Kategori:")
+        search_label = QLabel(f"{t('category')}:")
         search_label.setStyleSheet(f"color: {COLORS.TEXT_SECONDARY}; margin-right: 8px;")
         header_layout.addWidget(search_label)
         
         self.category_search = QLineEdit()
         self.category_search.setMinimumWidth(160)
-        self.category_search.setPlaceholderText("Kategori ara...")
+        self.category_search.setPlaceholderText(t("category_search"))
         self.category_search.textChanged.connect(self.refresh)
         header_layout.addWidget(self.category_search)
         
         header_layout.addSpacing(16)
         
-        self.add_btn = QPushButton("Yeni İşlem")
+        self.add_btn = QPushButton(t("new_transaction"))
         self.add_btn.setStyleSheet(f"""
             QPushButton {{
                 background-color: {COLORS.SUCCESS};
@@ -141,7 +141,7 @@ class TransactionsView(QWidget):
         self.table = QTableWidget()
         self.table.setColumnCount(7)
         self.table.setHorizontalHeaderLabels([
-            "ID", "Tarih", "Hesap", "Tip", "Kategori", "Açıklama", "Tutar"
+            "ID", t("date"), t("account"), t("type"), t("category"), t("description"), t("amount")
         ])
         
         header = self.table.horizontalHeader()
@@ -193,7 +193,7 @@ class TransactionsView(QWidget):
         layout.setSpacing(12)
         layout.setContentsMargins(20, 20, 20, 20)
         
-        self.detail_title = QLabel("İşlem Detayları")
+        self.detail_title = QLabel(t("transaction_details"))
         self.detail_title.setStyleSheet(f"""
             font-size: 18px;
             font-weight: 600;
@@ -202,7 +202,7 @@ class TransactionsView(QWidget):
         """)
         layout.addWidget(self.detail_title)
         
-        date_label = QLabel("Tarih")
+        date_label = QLabel(t("date"))
         date_label.setStyleSheet(f"color: {COLORS.TEXT_SECONDARY}; font-size: 12px; border: none;")
         layout.addWidget(date_label)
         
@@ -211,31 +211,31 @@ class TransactionsView(QWidget):
         self.detail_date.setDate(QDate.currentDate())
         layout.addWidget(self.detail_date)
         
-        account_label = QLabel("Hesap")
+        account_label = QLabel(t("account"))
         account_label.setStyleSheet(f"color: {COLORS.TEXT_SECONDARY}; font-size: 12px; border: none;")
         layout.addWidget(account_label)
         
         self.detail_account = QComboBox()
         layout.addWidget(self.detail_account)
         
-        type_label = QLabel("İşlem Tipi")
+        type_label = QLabel(t("transaction_type"))
         type_label.setStyleSheet(f"color: {COLORS.TEXT_SECONDARY}; font-size: 12px; border: none;")
         layout.addWidget(type_label)
         
         self.detail_type = QComboBox()
-        self.detail_type.addItem("Gelir", TransactionType.INCOME)
-        self.detail_type.addItem("Gider", TransactionType.EXPENSE)
+        self.detail_type.addItem(t("income"), TransactionType.INCOME)
+        self.detail_type.addItem(t("expense"), TransactionType.EXPENSE)
         layout.addWidget(self.detail_type)
         
-        category_label = QLabel("Kategori")
+        category_label = QLabel(t("category"))
         category_label.setStyleSheet(f"color: {COLORS.TEXT_SECONDARY}; font-size: 12px; border: none;")
         layout.addWidget(category_label)
         
         self.detail_category = QLineEdit()
-        self.detail_category.setPlaceholderText("Kategori girin...")
+        self.detail_category.setPlaceholderText(t("enter_category"))
         layout.addWidget(self.detail_category)
         
-        amount_label = QLabel("Tutar")
+        amount_label = QLabel(t("amount"))
         amount_label.setStyleSheet(f"color: {COLORS.TEXT_SECONDARY}; font-size: 12px; border: none;")
         layout.addWidget(amount_label)
         
@@ -245,19 +245,19 @@ class TransactionsView(QWidget):
         self.detail_amount.setPrefix("₺ ")
         layout.addWidget(self.detail_amount)
         
-        desc_label = QLabel("Açıklama")
+        desc_label = QLabel(t("description"))
         desc_label.setStyleSheet(f"color: {COLORS.TEXT_SECONDARY}; font-size: 12px; border: none;")
         layout.addWidget(desc_label)
         
         self.detail_description = QLineEdit()
-        self.detail_description.setPlaceholderText("Açıklama girin...")
+        self.detail_description.setPlaceholderText(t("enter_description"))
         layout.addWidget(self.detail_description)
         
         layout.addStretch()
         
         btn_layout = QHBoxLayout()
         
-        self.save_btn = QPushButton("Kaydet")
+        self.save_btn = QPushButton(t("save"))
         self.save_btn.setStyleSheet(f"""
             QPushButton {{
                 background-color: {COLORS.PRIMARY};
@@ -270,7 +270,7 @@ class TransactionsView(QWidget):
         self.save_btn.clicked.connect(self._on_save_detail)
         btn_layout.addWidget(self.save_btn)
         
-        self.delete_btn = QPushButton("Sil")
+        self.delete_btn = QPushButton(t("delete"))
         self.delete_btn.setStyleSheet(f"""
             QPushButton {{
                 background-color: {COLORS.DANGER};
@@ -304,7 +304,7 @@ class TransactionsView(QWidget):
             self.detail_category.clear()
             self.detail_description.clear()
             self.detail_amount.setValue(0)
-            self.detail_title.setText("İşlem Detayları")
+            self.detail_title.setText(t("transaction_details"))
     
     def _on_selection_changed(self) -> None:
         """Tablo seçimi değiştiğinde çağrılır."""
@@ -412,7 +412,7 @@ class TransactionsView(QWidget):
     
     def _update_header_indicators(self) -> None:
         """Sütun başlıklarındaki sıralama göstergelerini günceller."""
-        column_names = ["ID", "Tarih", "Hesap", "Tip", "Kategori", "Açıklama", "Tutar"]
+        column_names = ["ID", t("date"), t("account"), t("type"), t("category"), t("description"), t("amount")]
         
         for i, name in enumerate(column_names):
             if i == self._sort_column:
@@ -493,10 +493,10 @@ class TransactionsView(QWidget):
             self.table.setItem(row, 2, QTableWidgetItem(account_name))
             
             if trans.is_income:
-                type_text = "Gelir"
+                type_text = t("income")
                 color = COLORS.SUCCESS
             else:
-                type_text = "Gider"
+                type_text = t("expense")
                 color = COLORS.DANGER
             type_item = QTableWidgetItem(type_text)
             type_item.setForeground(QColor(color))
@@ -521,8 +521,8 @@ class TransactionsView(QWidget):
         if not accounts:
             QMessageBox.warning(
                 self,
-                "Uyarı",
-                "İşlem eklemek için önce bir hesap oluşturmalısınız!"
+                t("warning"),
+                t("msg_create_account_first")
             )
             return
         
@@ -559,9 +559,9 @@ class TransactionsView(QWidget):
         """
         reply = QMessageBox.question(
             self,
-            "İşlem Sil",
-            "Bu işlemi silmek istediğinize emin misiniz?\n\n"
-            "Bu işlem geri alınamaz ve hesap bakiyesi güncellenecektir!",
+            t("dialog_delete_transaction"),
+            f"{t('msg_delete_transaction')}\n\n"
+            f"{t('msg_delete_transaction_warning')}",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No
         )

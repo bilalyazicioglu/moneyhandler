@@ -27,7 +27,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import QDate
 
-from config import CURRENCIES, TransactionType, COLORS, convert_currency
+from config import CURRENCIES, TransactionType, COLORS, convert_currency, t
 from models.account import Account
 from models.transaction import Transaction
 from models.planned_item import PlannedItem
@@ -60,7 +60,7 @@ class AccountDialog(QDialog):
     
     def _setup_ui(self) -> None:
         """UI bileşenlerini oluşturur."""
-        self.setWindowTitle("Hesap Ekle" if self.account is None else "Hesap Düzenle")
+        self.setWindowTitle(t("dialog_add_account") if self.account is None else t("dialog_edit_account"))
         self.setMinimumWidth(450)
         self.setModal(True)
         
@@ -68,7 +68,7 @@ class AccountDialog(QDialog):
         layout.setSpacing(20)
         layout.setContentsMargins(24, 24, 24, 24)
         
-        title = QLabel("Hesap Ekle" if self.account is None else "Hesap Düzenle")
+        title = QLabel(t("dialog_add_account") if self.account is None else t("dialog_edit_account"))
         title.setStyleSheet(f"""
             font-size: 20px;
             font-weight: 700;
@@ -87,18 +87,18 @@ class AccountDialog(QDialog):
         form_layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
         
         self.name_input = QLineEdit()
-        self.name_input.setPlaceholderText("Örn: Nakit Cüzdan, Ziraat Bankası")
-        form_layout.addRow("Hesap Adı", self.name_input)
+        self.name_input.setPlaceholderText(t("placeholder_account_name"))
+        form_layout.addRow(t("account_name"), self.name_input)
         
         self.type_combo = QComboBox()
-        self.type_combo.addItem("Nakit", "cash")
-        self.type_combo.addItem("Banka", "bank")
-        form_layout.addRow("Hesap Tipi", self.type_combo)
+        self.type_combo.addItem(t("account_type_cash"), "cash")
+        self.type_combo.addItem(t("account_type_bank"), "bank")
+        form_layout.addRow(t("account_type"), self.type_combo)
         
         self.currency_combo = QComboBox()
         for code, currency in CURRENCIES.items():
             self.currency_combo.addItem(f"{currency.symbol} {currency.name}", code)
-        form_layout.addRow("Para Birimi", self.currency_combo)
+        form_layout.addRow(t("currency"), self.currency_combo)
         
         self.balance_input = QDoubleSpinBox()
         self.balance_input.setRange(-999999999, 999999999)
@@ -106,12 +106,12 @@ class AccountDialog(QDialog):
         self.balance_input.setSingleStep(100)
         if self.account is not None:
             self.balance_input.setEnabled(False)
-        form_layout.addRow("Bakiye", self.balance_input)
+        form_layout.addRow(t("balance"), self.balance_input)
         
         self.description_input = QTextEdit()
         self.description_input.setMaximumHeight(80)
-        self.description_input.setPlaceholderText("Hesap açıklaması (opsiyonel)")
-        form_layout.addRow("Açıklama", self.description_input)
+        self.description_input.setPlaceholderText(t("placeholder_account_desc"))
+        form_layout.addRow(t("description"), self.description_input)
         
         layout.addLayout(form_layout)
         
@@ -120,7 +120,7 @@ class AccountDialog(QDialog):
         button_layout = QHBoxLayout()
         button_layout.addStretch()
         
-        self.cancel_btn = QPushButton("İptal")
+        self.cancel_btn = QPushButton(t("cancel"))
         self.cancel_btn.setStyleSheet(f"""
             QPushButton {{
                 background-color: {COLORS.BG_ELEVATED};
@@ -134,7 +134,7 @@ class AccountDialog(QDialog):
         self.cancel_btn.clicked.connect(self.reject)
         button_layout.addWidget(self.cancel_btn)
         
-        self.save_btn = QPushButton("Kaydet")
+        self.save_btn = QPushButton(t("save"))
         self.save_btn.setStyleSheet(f"""
             QPushButton {{
                 background-color: {COLORS.PRIMARY};
@@ -171,7 +171,7 @@ class AccountDialog(QDialog):
         """Kaydet butonuna tıklandığında."""
         name = self.name_input.text().strip()
         if not name:
-            QMessageBox.warning(self, "Uyarı", "Hesap adı boş olamaz!")
+            QMessageBox.warning(self, t("warning"), t("msg_account_empty"))
             return
         
         self.accept()
@@ -227,7 +227,7 @@ class TransactionDialog(QDialog):
     
     def _setup_ui(self) -> None:
         """UI bileşenlerini oluşturur."""
-        self.setWindowTitle("İşlem Ekle" if self.transaction is None else "İşlem Düzenle")
+        self.setWindowTitle(t("dialog_add_transaction") if self.transaction is None else t("dialog_edit_transaction"))
         self.setMinimumWidth(480)
         self.setModal(True)
         
@@ -235,7 +235,7 @@ class TransactionDialog(QDialog):
         layout.setSpacing(20)
         layout.setContentsMargins(24, 24, 24, 24)
         
-        title = QLabel("İşlem Ekle" if self.transaction is None else "İşlem Düzenle")
+        title = QLabel(t("dialog_add_transaction") if self.transaction is None else t("dialog_edit_transaction"))
         title.setStyleSheet(f"""
             font-size: 20px;
             font-weight: 700;
@@ -261,41 +261,41 @@ class TransactionDialog(QDialog):
                 account.id
             )
         self.account_combo.currentIndexChanged.connect(self._on_account_changed)
-        form_layout.addRow("Hesap", self.account_combo)
+        form_layout.addRow(t("account"), self.account_combo)
         
         self.type_combo = QComboBox()
-        self.type_combo.addItem("Gelir", TransactionType.INCOME)
-        self.type_combo.addItem("Gider", TransactionType.EXPENSE)
-        form_layout.addRow("İşlem Tipi", self.type_combo)
+        self.type_combo.addItem(t("income"), TransactionType.INCOME)
+        self.type_combo.addItem(t("expense"), TransactionType.EXPENSE)
+        form_layout.addRow(t("transaction_type"), self.type_combo)
         
         self.amount_input = QDoubleSpinBox()
         self.amount_input.setRange(0.01, 999999999)
         self.amount_input.setDecimals(2)
         self.amount_input.setSingleStep(100)
-        form_layout.addRow("Tutar", self.amount_input)
+        form_layout.addRow(t("amount"), self.amount_input)
         
         self.currency_combo = QComboBox()
         for code, currency in CURRENCIES.items():
             self.currency_combo.addItem(f"{currency.symbol} {currency.name}", code)
-        form_layout.addRow("Para Birimi", self.currency_combo)
+        form_layout.addRow(t("currency"), self.currency_combo)
         
         self.date_input = QDateEdit()
         self.date_input.setCalendarPopup(True)
         self.date_input.setDate(QDate.currentDate())
-        form_layout.addRow("Tarih", self.date_input)
+        form_layout.addRow(t("date"), self.date_input)
         
         self.category_input = QComboBox()
         self.category_input.setEditable(True)
         self.category_input.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
         self.category_input.addItems(self.categories)
         self.category_input.setCurrentText("")
-        self.category_input.lineEdit().setPlaceholderText("Örn: Maaş, Kira, Market")
-        form_layout.addRow("Kategori", self.category_input)
+        self.category_input.lineEdit().setPlaceholderText(t("placeholder_category"))
+        form_layout.addRow(t("category"), self.category_input)
         
         self.description_input = QTextEdit()
         self.description_input.setMaximumHeight(80)
-        self.description_input.setPlaceholderText("İşlem açıklaması (opsiyonel)")
-        form_layout.addRow("Açıklama", self.description_input)
+        self.description_input.setPlaceholderText(t("placeholder_description"))
+        form_layout.addRow(t("description"), self.description_input)
         
         layout.addLayout(form_layout)
         
@@ -304,7 +304,7 @@ class TransactionDialog(QDialog):
         button_layout = QHBoxLayout()
         button_layout.addStretch()
         
-        self.cancel_btn = QPushButton("İptal")
+        self.cancel_btn = QPushButton(t("cancel"))
         self.cancel_btn.setStyleSheet(f"""
             QPushButton {{
                 background-color: {COLORS.BG_ELEVATED};
@@ -318,7 +318,7 @@ class TransactionDialog(QDialog):
         self.cancel_btn.clicked.connect(self.reject)
         button_layout.addWidget(self.cancel_btn)
         
-        self.save_btn = QPushButton("Kaydet")
+        self.save_btn = QPushButton(t("save"))
         self.save_btn.setStyleSheet(f"""
             QPushButton {{
                 background-color: {COLORS.PRIMARY};
@@ -376,11 +376,11 @@ class TransactionDialog(QDialog):
     def _on_save(self) -> None:
         """Kaydet butonuna tıklandığında."""
         if self.account_combo.count() == 0:
-            QMessageBox.warning(self, "Uyarı", "Önce bir hesap oluşturmalısınız!")
+            QMessageBox.warning(self, t("warning"), t("msg_create_account_first"))
             return
         
         if self.amount_input.value() <= 0:
-            QMessageBox.warning(self, "Uyarı", "Tutar 0'dan büyük olmalıdır!")
+            QMessageBox.warning(self, t("warning"), t("msg_amount_positive"))
             return
         
         self.accept()
@@ -458,8 +458,8 @@ class PlannedItemDialog(QDialog):
     def _setup_ui(self) -> None:
         """UI bileşenlerini oluşturur."""
         self.setWindowTitle(
-            "Planlanan İşlem Ekle" if self.planned_item is None 
-            else "Planlanan İşlem Düzenle"
+            t("dialog_add_planned") if self.planned_item is None 
+            else t("dialog_edit_planned")
         )
         self.setMinimumWidth(480)
         self.setModal(True)
@@ -470,8 +470,8 @@ class PlannedItemDialog(QDialog):
         
         # Başlık
         title = QLabel(
-            "Planlanan İşlem Ekle" if self.planned_item is None 
-            else "Planlanan İşlem Düzenle"
+            t("dialog_add_planned") if self.planned_item is None 
+            else t("dialog_edit_planned")
         )
         title.setStyleSheet(f"""
             font-size: 20px;
@@ -497,41 +497,41 @@ class PlannedItemDialog(QDialog):
                 f"{account.name} ({symbol})",
                 account.id
             )
-        form_layout.addRow("Hesap", self.account_combo)
+        form_layout.addRow(t("account"), self.account_combo)
         
         self.type_combo = QComboBox()
-        self.type_combo.addItem("Beklenen Gelir", TransactionType.INCOME)
-        self.type_combo.addItem("Beklenen Gider", TransactionType.EXPENSE)
-        form_layout.addRow("İşlem Tipi", self.type_combo)
+        self.type_combo.addItem(t("expected_income"), TransactionType.INCOME)
+        self.type_combo.addItem(t("expected_expense"), TransactionType.EXPENSE)
+        form_layout.addRow(t("transaction_type"), self.type_combo)
         
         self.amount_input = QDoubleSpinBox()
         self.amount_input.setRange(0.01, 999999999)
         self.amount_input.setDecimals(2)
         self.amount_input.setSingleStep(100)
-        form_layout.addRow("Tutar", self.amount_input)
+        form_layout.addRow(t("amount"), self.amount_input)
         
         self.currency_combo = QComboBox()
         for code, currency in CURRENCIES.items():
             self.currency_combo.addItem(f"{currency.symbol} {currency.name}", code)
-        form_layout.addRow("Para Birimi", self.currency_combo)
+        form_layout.addRow(t("currency"), self.currency_combo)
         
         self.date_input = QDateEdit()
         self.date_input.setCalendarPopup(True)
         self.date_input.setDate(QDate.currentDate())
-        form_layout.addRow("Planlanan Tarih", self.date_input)
+        form_layout.addRow(t("planned_date"), self.date_input)
         
         self.category_input = QComboBox()
         self.category_input.setEditable(True)
         self.category_input.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
         self.category_input.addItems(self.categories)
         self.category_input.setCurrentText("")
-        self.category_input.lineEdit().setPlaceholderText("Örn: Maaş, Kira, Fatura")
-        form_layout.addRow("Kategori", self.category_input)
+        self.category_input.lineEdit().setPlaceholderText(t("placeholder_planned_category"))
+        form_layout.addRow(t("category"), self.category_input)
         
         self.description_input = QTextEdit()
         self.description_input.setMaximumHeight(80)
-        self.description_input.setPlaceholderText("Açıklama (opsiyonel)")
-        form_layout.addRow("Açıklama", self.description_input)
+        self.description_input.setPlaceholderText(f"{t('description')} ({t('optional')})")
+        form_layout.addRow(t("description"), self.description_input)
         
         layout.addLayout(form_layout)
         
@@ -540,7 +540,7 @@ class PlannedItemDialog(QDialog):
         button_layout = QHBoxLayout()
         button_layout.addStretch()
         
-        self.cancel_btn = QPushButton("İptal")
+        self.cancel_btn = QPushButton(t("cancel"))
         self.cancel_btn.setStyleSheet(f"""
             QPushButton {{
                 background-color: {COLORS.BG_ELEVATED};
@@ -554,7 +554,7 @@ class PlannedItemDialog(QDialog):
         self.cancel_btn.clicked.connect(self.reject)
         button_layout.addWidget(self.cancel_btn)
         
-        self.save_btn = QPushButton("Kaydet")
+        self.save_btn = QPushButton(t("save"))
         self.save_btn.setStyleSheet(f"""
             QPushButton {{
                 background-color: {COLORS.PRIMARY};
@@ -600,11 +600,11 @@ class PlannedItemDialog(QDialog):
     def _on_save(self) -> None:
         """Kaydet butonuna tıklandığında."""
         if self.account_combo.count() == 0:
-            QMessageBox.warning(self, "Uyarı", "Önce bir hesap oluşturmalısınız!")
+            QMessageBox.warning(self, t("warning"), t("msg_create_account_first"))
             return
         
         if self.amount_input.value() <= 0:
-            QMessageBox.warning(self, "Uyarı", "Tutar 0'dan büyük olmalıdır!")
+            QMessageBox.warning(self, t("warning"), t("msg_amount_positive"))
             return
         
         self.accept()

@@ -455,3 +455,336 @@ def get_stylesheet() -> str:
             font-size: 12px;
         }}
     """
+
+
+# Dil Ayarları / Language Settings
+CURRENT_LANGUAGE: str = "tr"  # "tr" veya "en"
+
+TRANSLATIONS = {
+    "tr": {
+        # Main Window
+        "app_title": "MoneyHandler - Kişisel Finans Yönetimi",
+        "tab_dashboard": "Dashboard",
+        "tab_accounts": "Hesaplar",
+        "tab_transactions": "İşlemler",
+        "tab_planned": "Planlanan",
+        "tab_weekly": "Haftalık",
+        "status_accounts": "Hesap",
+        "status_transactions": "İşlem",
+        "status_planned": "Planlanan",
+        
+        # Dashboard
+        "dashboard_title": "Dashboard",
+        "dashboard_subtitle": "Finansal durumunuzun özeti",
+        "total_assets": "Toplam Varlık",
+        "total_assets_desc": "Tüm hesaplarınızın toplam değeri",
+        "total_income": "Toplam Gelir",
+        "total_income_desc": "Kayıtlı tüm gelirleriniz",
+        "total_expense": "Toplam Gider",
+        "total_expense_desc": "Kayıtlı tüm giderleriniz",
+        "upcoming_payments": "Yaklaşan",
+        "upcoming_days": "gün",
+        "recent_transactions": "Son İşlemler",
+        
+        # Accounts
+        "accounts_title": "Hesaplar",
+        "accounts_subtitle": "Nakit ve banka hesaplarınızı yönetin",
+        "new_account": "Yeni Hesap",
+        "account_details": "Hesap Detayları",
+        "account_name": "Hesap Adı",
+        "account_type": "Hesap Tipi",
+        "account_type_cash": "Nakit",
+        "account_type_bank": "Banka",
+        "balance": "Bakiye",
+        "detail": "Detay",
+        "description": "Açıklama",
+        "transaction_history": "İşlem Geçmişi",
+        "transactions_count": "işlem",
+        
+        # Transactions
+        "transactions_title": "İşlemler",
+        "transactions_subtitle": "Gelir ve gider işlemlerinizi takip edin",
+        "new_transaction": "Yeni İşlem",
+        "transaction_details": "İşlem Detayları",
+        "filter": "Filtre",
+        "all": "Tümü",
+        "incomes": "Gelirler",
+        "expenses": "Giderler",
+        "category": "Kategori",
+        "category_search": "Kategori ara...",
+        "date": "Tarih",
+        "account": "Hesap",
+        "transaction_type": "İşlem Tipi",
+        "income": "Gelir",
+        "expense": "Gider",
+        "amount": "Tutar",
+        "type": "Tip",
+        
+        # Planned Items
+        "planned_title": "Planlanan İşlemler",
+        "planned_subtitle": "Beklenen gelir ve giderlerinizi yönetin",
+        "new_planned": "Yeni Planlanan İşlem",
+        "planned_details": "Planlanan İşlem Detayları",
+        "planned_date": "Planlanan Tarih",
+        "expected_income": "Beklenen Gelir",
+        "expected_expense": "Beklenen Gider",
+        "realize": "Gerçekleştir",
+        "realize_info": "Gerçekleştir butonuna tıklayarak planlanan işlemi gerçek bir işleme dönüştürebilirsiniz.",
+        "days_left": "gün kaldı",
+        "overdue": "Vadesi geçmiş!",
+        
+        # Weekly View
+        "weekly_title": "Haftalık Görünüm",
+        "this_week": "Bu hafta",
+        "today": "Bugün",
+        "daily_avg_expense": "Günlük Ort. Harcama",
+        "daily_avg_income": "Günlük Ort. Gelir",
+        "weekly_expense": "Haftalık Harcama",
+        "weekly_income": "Haftalık Gelir",
+        "category_filter": "Kategori Filtresi (Ortalama Hesaplama İçin)",
+        "general": "Genel",
+        
+        # Day names
+        "day_monday": "Pazartesi",
+        "day_tuesday": "Salı",
+        "day_wednesday": "Çarşamba",
+        "day_thursday": "Perşembe",
+        "day_friday": "Cuma",
+        "day_saturday": "Cumartesi",
+        "day_sunday": "Pazar",
+        "day_mon": "Pzt",
+        "day_tue": "Sal",
+        "day_wed": "Çar",
+        "day_thu": "Per",
+        "day_fri": "Cum",
+        "day_sat": "Cmt",
+        "day_sun": "Paz",
+        
+        # Common
+        "currency": "Para Birimi",
+        "save": "Kaydet",
+        "cancel": "İptal",
+        "delete": "Sil",
+        "close": "Kapat",
+        "warning": "Uyarı",
+        "error": "Hata",
+        "success": "Başarılı",
+        "confirm": "Onayla",
+        "enter_category": "Kategori girin...",
+        "enter_description": "Açıklama girin...",
+        "optional": "opsiyonel",
+        
+        # Messages
+        "msg_account_empty": "Hesap adı boş olamaz!",
+        "msg_create_account_first": "İşlem eklemek için önce bir hesap oluşturmalısınız!",
+        "msg_amount_positive": "Tutar 0'dan büyük olmalıdır!",
+        "msg_delete_account": "hesabını silmek istediğinize emin misiniz?",
+        "msg_delete_account_warning": "Bu işlem geri alınamaz ve hesaba bağlı tüm işlemler de silinecektir!",
+        "msg_delete_transaction": "Bu işlemi silmek istediğinize emin misiniz?",
+        "msg_delete_transaction_warning": "Bu işlem geri alınamaz ve hesap bakiyesi güncellenecektir!",
+        "msg_delete_planned": "Bu planlanan işlemi silmek istediğinize emin misiniz?",
+        "msg_realize_confirm": "Bu planlanan işlemi gerçek bir işleme dönüştürmek istediğinize emin misiniz?",
+        "msg_realize_info": "Bu işlem hesap bakiyesini güncelleyecek ve planlanan işlemi silecektir.",
+        "msg_realize_success": "Planlanan işlem başarıyla gerçekleştirildi!",
+        "msg_realize_error": "İşlem gerçekleştirilirken bir hata oluştu.",
+        "msg_description_saved": "Açıklama kaydedildi!",
+        "msg_save_failed": "Değişiklik kaydedilemedi.",
+        
+        # Dialog titles
+        "dialog_add_account": "Hesap Ekle",
+        "dialog_edit_account": "Hesap Düzenle",
+        "dialog_add_transaction": "İşlem Ekle",
+        "dialog_edit_transaction": "İşlem Düzenle",
+        "dialog_add_planned": "Planlanan İşlem Ekle",
+        "dialog_edit_planned": "Planlanan İşlem Düzenle",
+        "dialog_delete_account": "Hesap Sil",
+        "dialog_delete_transaction": "İşlem Sil",
+        "dialog_delete_planned": "Planlanan İşlem Sil",
+        "dialog_realize": "İşlemi Gerçekleştir",
+        
+        # Form placeholders
+        "placeholder_account_name": "Örn: Nakit Cüzdan, Ziraat Bankası",
+        "placeholder_category": "Örn: Maaş, Kira, Market",
+        "placeholder_planned_category": "Örn: Maaş, Kira, Fatura",
+        "placeholder_description": "İşlem açıklaması (opsiyonel)",
+        "placeholder_account_desc": "Hesap açıklaması (opsiyonel)",
+    },
+    "en": {
+        # Main Window
+        "app_title": "MoneyHandler - Personal Finance Management",
+        "tab_dashboard": "Dashboard",
+        "tab_accounts": "Accounts",
+        "tab_transactions": "Transactions",
+        "tab_planned": "Planned",
+        "tab_weekly": "Weekly",
+        "status_accounts": "Account",
+        "status_transactions": "Transaction",
+        "status_planned": "Planned",
+        
+        # Dashboard
+        "dashboard_title": "Dashboard",
+        "dashboard_subtitle": "Summary of your financial status",
+        "total_assets": "Total Assets",
+        "total_assets_desc": "Total value of all your accounts",
+        "total_income": "Total Income",
+        "total_income_desc": "All your recorded income",
+        "total_expense": "Total Expense",
+        "total_expense_desc": "All your recorded expenses",
+        "upcoming_payments": "Upcoming",
+        "upcoming_days": "days",
+        "recent_transactions": "Recent Transactions",
+        
+        # Accounts
+        "accounts_title": "Accounts",
+        "accounts_subtitle": "Manage your cash and bank accounts",
+        "new_account": "New Account",
+        "account_details": "Account Details",
+        "account_name": "Account Name",
+        "account_type": "Account Type",
+        "account_type_cash": "Cash",
+        "account_type_bank": "Bank",
+        "balance": "Balance",
+        "detail": "Detail",
+        "description": "Description",
+        "transaction_history": "Transaction History",
+        "transactions_count": "transactions",
+        
+        # Transactions
+        "transactions_title": "Transactions",
+        "transactions_subtitle": "Track your income and expenses",
+        "new_transaction": "New Transaction",
+        "transaction_details": "Transaction Details",
+        "filter": "Filter",
+        "all": "All",
+        "incomes": "Incomes",
+        "expenses": "Expenses",
+        "category": "Category",
+        "category_search": "Search category...",
+        "date": "Date",
+        "account": "Account",
+        "transaction_type": "Transaction Type",
+        "income": "Income",
+        "expense": "Expense",
+        "amount": "Amount",
+        "type": "Type",
+        
+        # Planned Items
+        "planned_title": "Planned Transactions",
+        "planned_subtitle": "Manage your expected income and expenses",
+        "new_planned": "New Planned Transaction",
+        "planned_details": "Planned Transaction Details",
+        "planned_date": "Planned Date",
+        "expected_income": "Expected Income",
+        "expected_expense": "Expected Expense",
+        "realize": "Realize",
+        "realize_info": "Click the Realize button to convert a planned transaction into an actual transaction.",
+        "days_left": "days left",
+        "overdue": "Overdue!",
+        
+        # Weekly View
+        "weekly_title": "Weekly View",
+        "this_week": "This week",
+        "today": "Today",
+        "daily_avg_expense": "Daily Avg. Expense",
+        "daily_avg_income": "Daily Avg. Income",
+        "weekly_expense": "Weekly Expense",
+        "weekly_income": "Weekly Income",
+        "category_filter": "Category Filter (For Average Calculation)",
+        "general": "General",
+        
+        # Day names
+        "day_monday": "Monday",
+        "day_tuesday": "Tuesday",
+        "day_wednesday": "Wednesday",
+        "day_thursday": "Thursday",
+        "day_friday": "Friday",
+        "day_saturday": "Saturday",
+        "day_sunday": "Sunday",
+        "day_mon": "Mon",
+        "day_tue": "Tue",
+        "day_wed": "Wed",
+        "day_thu": "Thu",
+        "day_fri": "Fri",
+        "day_sat": "Sat",
+        "day_sun": "Sun",
+        
+        # Common
+        "currency": "Currency",
+        "save": "Save",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "close": "Close",
+        "warning": "Warning",
+        "error": "Error",
+        "success": "Success",
+        "confirm": "Confirm",
+        "enter_category": "Enter category...",
+        "enter_description": "Enter description...",
+        "optional": "optional",
+        
+        # Messages
+        "msg_account_empty": "Account name cannot be empty!",
+        "msg_create_account_first": "You must create an account first to add a transaction!",
+        "msg_amount_positive": "Amount must be greater than 0!",
+        "msg_delete_account": "Are you sure you want to delete this account?",
+        "msg_delete_account_warning": "This action cannot be undone and all transactions linked to this account will be deleted!",
+        "msg_delete_transaction": "Are you sure you want to delete this transaction?",
+        "msg_delete_transaction_warning": "This action cannot be undone and the account balance will be updated!",
+        "msg_delete_planned": "Are you sure you want to delete this planned transaction?",
+        "msg_realize_confirm": "Are you sure you want to convert this planned transaction into an actual transaction?",
+        "msg_realize_info": "This will update the account balance and delete the planned transaction.",
+        "msg_realize_success": "Planned transaction has been successfully realized!",
+        "msg_realize_error": "An error occurred while realizing the transaction.",
+        "msg_description_saved": "Description saved!",
+        "msg_save_failed": "Failed to save changes.",
+        
+        # Dialog titles
+        "dialog_add_account": "Add Account",
+        "dialog_edit_account": "Edit Account",
+        "dialog_add_transaction": "Add Transaction",
+        "dialog_edit_transaction": "Edit Transaction",
+        "dialog_add_planned": "Add Planned Transaction",
+        "dialog_edit_planned": "Edit Planned Transaction",
+        "dialog_delete_account": "Delete Account",
+        "dialog_delete_transaction": "Delete Transaction",
+        "dialog_delete_planned": "Delete Planned Transaction",
+        "dialog_realize": "Realize Transaction",
+        
+        # Form placeholders
+        "placeholder_account_name": "E.g.: Cash Wallet, Bank Account",
+        "placeholder_category": "E.g.: Salary, Rent, Groceries",
+        "placeholder_planned_category": "E.g.: Salary, Rent, Bills",
+        "placeholder_description": "Transaction description (optional)",
+        "placeholder_account_desc": "Account description (optional)",
+    }
+}
+
+
+def t(key: str) -> str:
+    """
+    Get translated string for the given key.
+    
+    Args:
+        key: Translation key
+        
+    Returns:
+        Translated string or key if not found
+    """
+    lang = TRANSLATIONS.get(CURRENT_LANGUAGE, TRANSLATIONS["tr"])
+    return lang.get(key, key)
+
+
+def get_day_names() -> list:
+    """Get translated day names (full)."""
+    return [
+        t("day_monday"), t("day_tuesday"), t("day_wednesday"),
+        t("day_thursday"), t("day_friday"), t("day_saturday"), t("day_sunday")
+    ]
+
+
+def get_day_names_short() -> list:
+    """Get translated day names (short)."""
+    return [
+        t("day_mon"), t("day_tue"), t("day_wed"),
+        t("day_thu"), t("day_fri"), t("day_sat"), t("day_sun")
+    ]

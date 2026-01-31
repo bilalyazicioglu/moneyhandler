@@ -28,7 +28,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtGui import QColor
 from PyQt6.QtCore import QDate
 
-from config import COLORS, CURRENCIES
+from config import COLORS, CURRENCIES, t
 from models.planned_item import PlannedItem, PlannedItemRepository
 from models.transaction import TransactionRepository
 from views.forms import PlannedItemDialog
@@ -80,7 +80,7 @@ class PlannedItemsView(QWidget):
         title_layout = QVBoxLayout()
         title_layout.setSpacing(4)
         
-        title = QLabel("Planlanan İşlemler")
+        title = QLabel(t("planned_title"))
         title.setStyleSheet(f"""
             font-size: 32px;
             font-weight: 700;
@@ -89,14 +89,14 @@ class PlannedItemsView(QWidget):
         """)
         title_layout.addWidget(title)
         
-        subtitle = QLabel("Beklenen gelir ve giderlerinizi yönetin")
+        subtitle = QLabel(t("planned_subtitle"))
         subtitle.setStyleSheet(f"color: {COLORS.TEXT_SECONDARY}; font-size: 14px;")
         title_layout.addWidget(subtitle)
         
         header_layout.addLayout(title_layout)
         header_layout.addStretch()
         
-        self.add_btn = QPushButton("Yeni Planlanan İşlem")
+        self.add_btn = QPushButton(t("new_planned"))
         self.add_btn.setStyleSheet(f"""
             QPushButton {{
                 background-color: {COLORS.SUCCESS};
@@ -112,9 +112,7 @@ class PlannedItemsView(QWidget):
         
         layout.addLayout(header_layout)
         
-        info_card = QLabel(
-            "Gerçekleştir butonuna tıklayarak planlanan işlemi gerçek bir işleme dönüştürebilirsiniz."
-        )
+        info_card = QLabel(t("realize_info"))
         info_card.setStyleSheet(f"""
             color: {COLORS.TEXT_SECONDARY};
             padding: 16px 20px;
@@ -132,7 +130,7 @@ class PlannedItemsView(QWidget):
         self.table = QTableWidget()
         self.table.setColumnCount(7)
         self.table.setHorizontalHeaderLabels([
-            "ID", "Tarih", "Hesap", "Tip", "Kategori", "Açıklama", "Tutar"
+            "ID", t("date"), t("account"), t("type"), t("category"), t("description"), t("amount")
         ])
         
         header = self.table.horizontalHeader()
@@ -184,7 +182,7 @@ class PlannedItemsView(QWidget):
         layout.setSpacing(12)
         layout.setContentsMargins(20, 20, 20, 20)
         
-        self.detail_title = QLabel("Planlanan İşlem Detayları")
+        self.detail_title = QLabel(t("planned_details"))
         self.detail_title.setStyleSheet(f"""
             font-size: 18px;
             font-weight: 600;
@@ -193,7 +191,7 @@ class PlannedItemsView(QWidget):
         """)
         layout.addWidget(self.detail_title)
         
-        date_label = QLabel("Planlanan Tarih")
+        date_label = QLabel(t("planned_date"))
         date_label.setStyleSheet(f"color: {COLORS.TEXT_SECONDARY}; font-size: 12px; border: none;")
         layout.addWidget(date_label)
         
@@ -202,31 +200,31 @@ class PlannedItemsView(QWidget):
         self.detail_date.setDate(QDate.currentDate())
         layout.addWidget(self.detail_date)
         
-        account_label = QLabel("Hesap")
+        account_label = QLabel(t("account"))
         account_label.setStyleSheet(f"color: {COLORS.TEXT_SECONDARY}; font-size: 12px; border: none;")
         layout.addWidget(account_label)
         
         self.detail_account = QComboBox()
         layout.addWidget(self.detail_account)
         
-        type_label = QLabel("İşlem Tipi")
+        type_label = QLabel(t("transaction_type"))
         type_label.setStyleSheet(f"color: {COLORS.TEXT_SECONDARY}; font-size: 12px; border: none;")
         layout.addWidget(type_label)
         
         self.detail_type = QComboBox()
-        self.detail_type.addItem("Gelir", "income")
-        self.detail_type.addItem("Gider", "expense")
+        self.detail_type.addItem(t("income"), "income")
+        self.detail_type.addItem(t("expense"), "expense")
         layout.addWidget(self.detail_type)
         
-        category_label = QLabel("Kategori")
+        category_label = QLabel(t("category"))
         category_label.setStyleSheet(f"color: {COLORS.TEXT_SECONDARY}; font-size: 12px; border: none;")
         layout.addWidget(category_label)
         
         self.detail_category = QLineEdit()
-        self.detail_category.setPlaceholderText("Kategori girin...")
+        self.detail_category.setPlaceholderText(t("enter_category"))
         layout.addWidget(self.detail_category)
         
-        amount_label = QLabel("Tutar")
+        amount_label = QLabel(t("amount"))
         amount_label.setStyleSheet(f"color: {COLORS.TEXT_SECONDARY}; font-size: 12px; border: none;")
         layout.addWidget(amount_label)
         
@@ -236,19 +234,19 @@ class PlannedItemsView(QWidget):
         self.detail_amount.setPrefix("₺ ")
         layout.addWidget(self.detail_amount)
         
-        desc_label = QLabel("Açıklama")
+        desc_label = QLabel(t("description"))
         desc_label.setStyleSheet(f"color: {COLORS.TEXT_SECONDARY}; font-size: 12px; border: none;")
         layout.addWidget(desc_label)
         
         self.detail_description = QLineEdit()
-        self.detail_description.setPlaceholderText("Açıklama girin...")
+        self.detail_description.setPlaceholderText(t("enter_description"))
         layout.addWidget(self.detail_description)
         
         layout.addStretch()
         
         btn_layout = QHBoxLayout()
         
-        self.realize_detail_btn = QPushButton("Gerçekleştir")
+        self.realize_detail_btn = QPushButton(t("realize"))
         self.realize_detail_btn.setStyleSheet(f"""
             QPushButton {{
                 background-color: {COLORS.PRIMARY};
@@ -261,7 +259,7 @@ class PlannedItemsView(QWidget):
         self.realize_detail_btn.clicked.connect(self._on_realize_selected)
         btn_layout.addWidget(self.realize_detail_btn)
         
-        self.save_btn = QPushButton("Kaydet")
+        self.save_btn = QPushButton(t("save"))
         self.save_btn.setStyleSheet(f"""
             QPushButton {{
                 background-color: {COLORS.SUCCESS};
@@ -274,7 +272,7 @@ class PlannedItemsView(QWidget):
         self.save_btn.clicked.connect(self._on_save_detail)
         btn_layout.addWidget(self.save_btn)
         
-        self.delete_btn = QPushButton("Sil")
+        self.delete_btn = QPushButton(t("delete"))
         self.delete_btn.setStyleSheet(f"""
             QPushButton {{
                 background-color: {COLORS.DANGER};
@@ -309,7 +307,7 @@ class PlannedItemsView(QWidget):
             self.detail_category.clear()
             self.detail_description.clear()
             self.detail_amount.setValue(0)
-            self.detail_title.setText("Planlanan İşlem Detayları")
+            self.detail_title.setText(t("planned_details"))
     
     def _on_selection_changed(self) -> None:
         """Tablo seçimi değiştiğinde çağrılır."""
@@ -407,7 +405,7 @@ class PlannedItemsView(QWidget):
     
     def _update_header_indicators(self) -> None:
         """Sütun başlıklarındaki sıralama göstergelerini günceller."""
-        column_names = ["ID", "Tarih", "Hesap", "Tip", "Kategori", "Açıklama", "Tutar"]
+        column_names = ["ID", t("date"), t("account"), t("type"), t("category"), t("description"), t("amount")]
         
         for i, name in enumerate(column_names):
             if i == self._sort_column:
@@ -471,10 +469,10 @@ class PlannedItemsView(QWidget):
             
             if item.is_overdue:
                 date_item.setForeground(QColor(COLORS.DANGER))
-                date_item.setToolTip("Vadesi geçmiş!")
+                date_item.setToolTip(t("overdue"))
             elif item.days_until <= 7:
                 date_item.setForeground(QColor(COLORS.WARNING))
-                date_item.setToolTip(f"{item.days_until} gün kaldı")
+                date_item.setToolTip(f"{item.days_until} {t('days_left')}")
             
             self.table.setItem(row, 1, date_item)
             
@@ -483,10 +481,10 @@ class PlannedItemsView(QWidget):
             self.table.setItem(row, 2, QTableWidgetItem(account_name))
             
             if item.is_income:
-                type_text = "Gelir"
+                type_text = t("income")
                 color = COLORS.SUCCESS
             else:
-                type_text = "Gider"
+                type_text = t("expense")
                 color = COLORS.DANGER
             type_item = QTableWidgetItem(type_text)
             type_item.setForeground(QColor(color))
@@ -508,8 +506,8 @@ class PlannedItemsView(QWidget):
         if not accounts:
             QMessageBox.warning(
                 self,
-                "Uyarı",
-                "Planlanan işlem eklemek için önce bir hesap oluşturmalısınız!"
+                t("warning"),
+                t("msg_create_account_first")
             )
             return
         
@@ -552,8 +550,8 @@ class PlannedItemsView(QWidget):
         """
         reply = QMessageBox.question(
             self,
-            "Planlanan İşlem Sil",
-            "Bu planlanan işlemi silmek istediğinize emin misiniz?",
+            t("dialog_delete_planned"),
+            t("msg_delete_planned"),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No
         )
@@ -572,11 +570,11 @@ class PlannedItemsView(QWidget):
         """
         reply = QMessageBox.question(
             self,
-            "İşlemi Gerçekleştir",
-            f"Bu planlanan işlemi gerçek bir işleme dönüştürmek istediğinize emin misiniz?\n\n"
-            f"Tutar: {CURRENCIES[item.currency].symbol}{item.amount:,.2f}\n"
-            f"Tip: {'Gelir' if item.is_income else 'Gider'}\n\n"
-            f"Bu işlem hesap bakiyesini güncelleyecek ve planlanan işlemi silecektir.",
+            t("dialog_realize"),
+            f"{t('msg_realize_confirm')}\n\n"
+            f"{t('amount')}: {CURRENCIES[item.currency].symbol}{item.amount:,.2f}\n"
+            f"{t('type')}: {t('income') if item.is_income else t('expense')}\n\n"
+            f"{t('msg_realize_info')}",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.Yes
         )
@@ -586,14 +584,14 @@ class PlannedItemsView(QWidget):
             if success:
                 QMessageBox.information(
                     self,
-                    "Başarılı",
-                    "Planlanan işlem başarıyla gerçekleştirildi!"
+                    t("success"),
+                    t("msg_realize_success")
                 )
                 self.refresh()
                 self.item_realized.emit()
             else:
                 QMessageBox.warning(
                     self,
-                    "Hata",
-                    "İşlem gerçekleştirilirken bir hata oluştu."
+                    t("error"),
+                    t("msg_realize_error")
                 )

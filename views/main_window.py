@@ -24,7 +24,8 @@ from config import (
     WINDOW_MIN_WIDTH,
     WINDOW_MIN_HEIGHT,
     get_stylesheet,
-    COLORS
+    COLORS,
+    t
 )
 from views.dashboard_view import DashboardView
 from views.accounts_view import AccountsView
@@ -71,7 +72,7 @@ class MainWindow(QMainWindow):
     
     def _setup_window(self) -> None:
         """Pencere ayarlarını yapılandırır."""
-        self.setWindowTitle("MoneyHandler - Kişisel Finans Yönetimi")
+        self.setWindowTitle(t("app_title"))
         self.setMinimumSize(WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT)
         
         screen = QApplication.primaryScreen()
@@ -122,19 +123,19 @@ class MainWindow(QMainWindow):
         self.tab_widget.setDocumentMode(True)
         
         self.dashboard_view = DashboardView(self.controller)
-        self.tab_widget.addTab(self.dashboard_view, "Dashboard")
+        self.tab_widget.addTab(self.dashboard_view, t("tab_dashboard"))
         
         self.accounts_view = AccountsView(self.controller)
-        self.tab_widget.addTab(self.accounts_view, "Hesaplar")
+        self.tab_widget.addTab(self.accounts_view, t("tab_accounts"))
         
         self.transactions_view = TransactionsView(self.controller)
-        self.tab_widget.addTab(self.transactions_view, "İşlemler")
+        self.tab_widget.addTab(self.transactions_view, t("tab_transactions"))
         
         self.planned_items_view = PlannedItemsView(self.controller)
-        self.tab_widget.addTab(self.planned_items_view, "Planlanan")
+        self.tab_widget.addTab(self.planned_items_view, t("tab_planned"))
         
         self.weekly_spending_view = WeeklySpendingView(self.controller)
-        self.tab_widget.addTab(self.weekly_spending_view, "Haftalık")
+        self.tab_widget.addTab(self.weekly_spending_view, t("tab_weekly"))
         
         layout.addWidget(self.tab_widget)
         
@@ -184,7 +185,7 @@ class MainWindow(QMainWindow):
         planned_count = len(self.controller.get_all_planned_items())
         
         self.status_bar.showMessage(
-            f"{accounts_count} Hesap  |  "
-            f"{transactions_count} İşlem  |  "
-            f"{planned_count} Planlanan"
+            f"{accounts_count} {t('status_accounts')}  |  "
+            f"{transactions_count} {t('status_transactions')}  |  "
+            f"{planned_count} {t('status_planned')}"
         )

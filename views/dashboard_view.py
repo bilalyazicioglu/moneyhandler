@@ -32,7 +32,8 @@ from config import (
     convert_to_base_currency,
     convert_currency,
     UPCOMING_DAYS_THRESHOLD,
-    TransactionType
+    TransactionType,
+    t
 )
 
 if TYPE_CHECKING:
@@ -74,7 +75,7 @@ class DashboardView(QWidget):
         header_layout = QVBoxLayout()
         header_layout.setSpacing(4)
         
-        title = QLabel("Dashboard")
+        title = QLabel(t("dashboard_title"))
         title.setStyleSheet(f"""
             font-size: 32px;
             font-weight: 700;
@@ -83,7 +84,7 @@ class DashboardView(QWidget):
         """)
         header_layout.addWidget(title)
         
-        subtitle = QLabel("Finansal durumunuzun özeti")
+        subtitle = QLabel(t("dashboard_subtitle"))
         subtitle.setStyleSheet(f"""
             font-size: 14px;
             color: {COLORS.TEXT_SECONDARY};
@@ -97,7 +98,7 @@ class DashboardView(QWidget):
         currency_layout = QHBoxLayout()
         currency_layout.setSpacing(8)
         
-        currency_label = QLabel("Para Birimi:")
+        currency_label = QLabel(f"{t('currency')}:")
         currency_label.setStyleSheet(f"""
             font-size: 13px;
             color: {COLORS.TEXT_SECONDARY};
@@ -119,26 +120,26 @@ class DashboardView(QWidget):
         cards_layout.setSpacing(20)
         
         self.total_card = self._create_summary_card(
-            "Toplam Varlık",
+            t("total_assets"),
             "₺0.00",
             COLORS.PRIMARY,
-            "Tüm hesaplarınızın toplam değeri"
+            t("total_assets_desc")
         )
         cards_layout.addWidget(self.total_card)
         
         self.income_card = self._create_summary_card(
-            "Toplam Gelir",
+            t("total_income"),
             "₺0.00",
             COLORS.SUCCESS,
-            "Kayıtlı tüm gelirleriniz"
+            t("total_income_desc")
         )
         cards_layout.addWidget(self.income_card)
         
         self.expense_card = self._create_summary_card(
-            "Toplam Gider",
+            t("total_expense"),
             "₺0.00",
             COLORS.DANGER,
-            "Kayıtlı tüm giderleriniz"
+            t("total_expense_desc")
         )
         cards_layout.addWidget(self.expense_card)
         
@@ -226,14 +227,14 @@ class DashboardView(QWidget):
         Returns:
             GroupBox widget'ı
         """
-        group = QGroupBox(f"Yaklaşan ({UPCOMING_DAYS_THRESHOLD} gün)")
+        group = QGroupBox(f"{t('upcoming_payments')} ({UPCOMING_DAYS_THRESHOLD} {t('upcoming_days')})")
         layout = QVBoxLayout(group)
         layout.setContentsMargins(16, 16, 16, 16)
         
         self.upcoming_table = QTableWidget()
         self.upcoming_table.setColumnCount(4)
         self.upcoming_table.setHorizontalHeaderLabels([
-            "Tarih", "Açıklama", "Tutar", "Tip"
+            t("date"), t("description"), t("amount"), t("type")
         ])
         self.upcoming_table.horizontalHeader().setSectionResizeMode(
             QHeaderView.ResizeMode.Stretch
@@ -257,14 +258,14 @@ class DashboardView(QWidget):
         Returns:
             GroupBox widget'ı
         """
-        group = QGroupBox("Son İşlemler")
+        group = QGroupBox(t("recent_transactions"))
         layout = QVBoxLayout(group)
         layout.setContentsMargins(16, 16, 16, 16)
         
         self.recent_table = QTableWidget()
         self.recent_table.setColumnCount(5)
         self.recent_table.setHorizontalHeaderLabels([
-            "Tarih", "Hesap", "Kategori", "Açıklama", "Tutar"
+            t("date"), t("account"), t("category"), t("description"), t("amount")
         ])
         self.recent_table.horizontalHeader().setSectionResizeMode(
             QHeaderView.ResizeMode.Stretch
@@ -339,7 +340,7 @@ class DashboardView(QWidget):
                 amount_item.setForeground(QColor(COLORS.SUCCESS))
             self.upcoming_table.setItem(row, 2, amount_item)
             
-            type_text = "Gider" if item.is_expense else "Gelir"
+            type_text = t("expense") if item.is_expense else t("income")
             self.upcoming_table.setItem(row, 3, QTableWidgetItem(type_text))
     
     def _update_recent_table(self) -> None:

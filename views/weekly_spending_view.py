@@ -29,15 +29,16 @@ from config import (
     CURRENCIES, 
     BASE_CURRENCY, 
     convert_to_base_currency,
-    convert_currency
+    convert_currency,
+    t,
+    get_day_names_short
 )
 
 if TYPE_CHECKING:
     from controllers.main_controller import MainController
 
 
-DAY_NAMES = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
-DAY_NAMES_SHORT = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
+
 
 
 class DayColumnWidget(QFrame):
@@ -129,7 +130,7 @@ class DayColumnWidget(QFrame):
                 trans_layout.setContentsMargins(6, 4, 6, 4)
                 trans_layout.setSpacing(2)
                 
-                category = trans.category or "Genel"
+                category = trans.category or t("general")
                 cat_label = QLabel(category)
                 cat_label.setStyleSheet(f"""
                     font-size: 10px;
@@ -200,7 +201,7 @@ class WeeklySpendingView(QWidget):
         title_layout = QVBoxLayout()
         title_layout.setSpacing(4)
         
-        title = QLabel("Haftalık Görünüm")
+        title = QLabel(t("weekly_title"))
         title.setStyleSheet(f"""
             font-size: 28px;
             font-weight: 700;
@@ -208,7 +209,7 @@ class WeeklySpendingView(QWidget):
         """)
         title_layout.addWidget(title)
         
-        self.date_range_label = QLabel("Bu hafta")
+        self.date_range_label = QLabel(t("this_week"))
         self.date_range_label.setStyleSheet(f"""
             font-size: 14px;
             color: {COLORS.TEXT_SECONDARY};
@@ -246,7 +247,7 @@ class WeeklySpendingView(QWidget):
         self.prev_week_btn.clicked.connect(self._go_to_prev_week)
         nav_layout.addWidget(self.prev_week_btn)
         
-        self.today_btn = QPushButton("Bugün")
+        self.today_btn = QPushButton(t("today"))
         self.today_btn.setFixedHeight(36)
         self.today_btn.setMinimumWidth(80)
         self.today_btn.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -304,7 +305,7 @@ class WeeklySpendingView(QWidget):
         currency_layout = QHBoxLayout()
         currency_layout.setSpacing(8)
         
-        currency_label = QLabel("Para Birimi:")
+        currency_label = QLabel(f"{t('currency')}:")
         currency_label.setStyleSheet(f"""
             font-size: 13px;
             color: {COLORS.TEXT_SECONDARY};
@@ -326,28 +327,28 @@ class WeeklySpendingView(QWidget):
         summary_layout.setSpacing(16)
         
         self.avg_expense_card = self._create_summary_card(
-            "Günlük Ort. Harcama",
+            t("daily_avg_expense"),
             "₺0.00",
             COLORS.DANGER
         )
         summary_layout.addWidget(self.avg_expense_card)
         
         self.avg_income_card = self._create_summary_card(
-            "Günlük Ort. Gelir",
+            t("daily_avg_income"),
             "₺0.00",
             COLORS.SUCCESS
         )
         summary_layout.addWidget(self.avg_income_card)
         
         self.weekly_expense_card = self._create_summary_card(
-            "Haftalık Harcama",
+            t("weekly_expense"),
             "₺0.00",
             COLORS.DANGER
         )
         summary_layout.addWidget(self.weekly_expense_card)
         
         self.weekly_income_card = self._create_summary_card(
-            "Haftalık Gelir",
+            t("weekly_income"),
             "₺0.00",
             COLORS.SUCCESS
         )
@@ -356,7 +357,7 @@ class WeeklySpendingView(QWidget):
         summary_layout.addStretch()
         layout.addLayout(summary_layout)
         
-        self.category_group = QGroupBox("Kategori Filtresi (Ortalama Hesaplama İçin)")
+        self.category_group = QGroupBox(t("category_filter"))
         self.category_group.setStyleSheet(f"""
             QGroupBox {{
                 background-color: {COLORS.BG_CARD};
@@ -532,7 +533,7 @@ class WeeklySpendingView(QWidget):
         filtered_income = 0.0
         
         for trans in all_transactions:
-            category = trans.category or "Genel"
+            category = trans.category or t(\"general\")
             if category in self.selected_categories:
                 amount_in_display = convert_currency(
                     trans.amount,
@@ -571,7 +572,7 @@ class WeeklySpendingView(QWidget):
         
         if is_current_week:
             self.date_range_label.setText(
-                f"Bu hafta • {week_start.strftime('%d %B')} - {week_end.strftime('%d %B %Y')}"
+                f"{t('this_week')} • {week_start.strftime('%d %B')} - {week_end.strftime('%d %B %Y')}"
             )
         else:
             self.date_range_label.setText(
@@ -594,7 +595,7 @@ class WeeklySpendingView(QWidget):
             if 0 <= day_index <= 6:
                 daily_transactions[day_index].append(trans)
                 
-                category = trans.category or "Genel"
+                category = trans.category or t("general")
                 all_categories.add(category)
                 
                 amount_in_display = convert_currency(
@@ -640,7 +641,7 @@ class WeeklySpendingView(QWidget):
             transactions = daily_transactions.get(day_index, [])
             
             day_widget = DayColumnWidget(
-                day_name=DAY_NAMES_SHORT[day_index],
+                day_name=get_day_names_short()[day_index],
                 day_date=day_date,
                 is_today=is_today,
                 transactions=transactions,
