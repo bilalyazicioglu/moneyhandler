@@ -31,6 +31,9 @@ View your weekly spending from Monday to Sunday in a calendar format. Each day s
 ### Planned Transactions
 Schedule recurring income and expenses like rent, bills, or salary. Upcoming payments automatically appear on the Dashboard.
 
+### Regular Income Tracking
+Define your recurring monthly income sources like salary, scholarship, or allowance. Set the expected payment day for each income. When you receive payment, record it with the actual date. The app calculates delay statistics showing if payments arrive early, on time, or late. Color-coded indicators help you quickly spot patterns in your income timing.
+
 ### Multi-Currency Support
 Supports TRY, USD, and EUR currencies. Use the currency selector on Dashboard and Weekly view to display amounts in your preferred currency. Conversion happens automatically.
 

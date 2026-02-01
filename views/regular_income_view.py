@@ -65,7 +65,6 @@ class RegularIncomeView(QWidget):
         layout.setSpacing(20)
         layout.setContentsMargins(32, 32, 32, 32)
         
-        # Header
         header_layout = QHBoxLayout()
         
         title_layout = QVBoxLayout()
@@ -103,11 +102,9 @@ class RegularIncomeView(QWidget):
         
         layout.addLayout(header_layout)
         
-        # Main content splitter
         splitter = QSplitter(Qt.Orientation.Horizontal)
         splitter.setStyleSheet("QSplitter::handle { background-color: transparent; }")
         
-        # Left: Income table
         self.table = QTableWidget()
         self.table.setColumnCount(6)
         self.table.setHorizontalHeaderLabels([
@@ -138,7 +135,6 @@ class RegularIncomeView(QWidget):
         
         splitter.addWidget(self.table)
         
-        # Right: Detail panel
         self.detail_panel = self._create_detail_panel()
         splitter.addWidget(self.detail_panel)
         
@@ -160,7 +156,6 @@ class RegularIncomeView(QWidget):
         layout.setSpacing(16)
         layout.setContentsMargins(20, 20, 20, 20)
         
-        # Title
         self.detail_title = QLabel(t("regular_income_details"))
         self.detail_title.setStyleSheet(f"""
             font-size: 18px;
@@ -170,7 +165,6 @@ class RegularIncomeView(QWidget):
         """)
         layout.addWidget(self.detail_title)
         
-        # Stats row
         stats_layout = QHBoxLayout()
         
         self.stat_amount = self._create_stat_card(t("amount"), "₺0")
@@ -184,7 +178,6 @@ class RegularIncomeView(QWidget):
         
         layout.addLayout(stats_layout)
         
-        # Payment history label
         history_label = QLabel(t("payment_history"))
         history_label.setStyleSheet(f"""
             color: {COLORS.TEXT_SECONDARY};
@@ -195,7 +188,6 @@ class RegularIncomeView(QWidget):
         """)
         layout.addWidget(history_label)
         
-        # Payment history table
         self.payment_table = QTableWidget()
         self.payment_table.setColumnCount(4)
         self.payment_table.setHorizontalHeaderLabels([
@@ -220,7 +212,6 @@ class RegularIncomeView(QWidget):
         
         layout.addWidget(self.payment_table)
         
-        # No payments message
         self.no_payments_label = QLabel(t("no_payments_yet"))
         self.no_payments_label.setStyleSheet(f"""
             color: {COLORS.TEXT_MUTED};
@@ -233,7 +224,6 @@ class RegularIncomeView(QWidget):
         
         layout.addStretch()
         
-        # Buttons
         btn_layout = QHBoxLayout()
         
         self.record_btn = QPushButton(t("record_payment"))
@@ -353,12 +343,10 @@ class RegularIncomeView(QWidget):
         """Düzenli gelir detaylarını panele yükler."""
         self.detail_title.setText(income.name)
         
-        # Stats
         symbol = CURRENCIES[income.currency].symbol
         self.stat_amount.findChild(QLabel, "value").setText(f"{symbol}{income.amount:,.2f}")
         self.stat_day.findChild(QLabel, "value").setText(str(income.expected_day))
         
-        # Average delay
         avg_delay = self._repo.get_average_delay(income.id)
         if avg_delay < 0:
             delay_text = f"{abs(avg_delay):.1f} {t('days_early')}"
@@ -379,7 +367,6 @@ class RegularIncomeView(QWidget):
             border: none;
         """)
         
-        # Payment history
         payments = self._repo.get_payments(income.id, limit=6)
         
         if payments:
@@ -388,19 +375,15 @@ class RegularIncomeView(QWidget):
             self.payment_table.setRowCount(len(payments))
             
             for row, payment in enumerate(payments):
-                # Expected date
                 expected_item = QTableWidgetItem(payment.expected_date.strftime("%d.%m.%Y"))
                 self.payment_table.setItem(row, 0, expected_item)
                 
-                # Actual date
                 actual_item = QTableWidgetItem(payment.actual_date.strftime("%d.%m.%Y"))
                 self.payment_table.setItem(row, 1, actual_item)
                 
-                # Amount
                 amount_item = QTableWidgetItem(f"{symbol}{payment.amount:,.2f}")
                 self.payment_table.setItem(row, 2, amount_item)
                 
-                # Delay status
                 delay = payment.delay_days
                 if delay < 0:
                     status_text = f"{abs(delay)} {t('days_early')}"
@@ -440,32 +423,26 @@ class RegularIncomeView(QWidget):
         self.table.setRowCount(len(incomes))
         
         for row, income in enumerate(incomes):
-            # ID
             id_item = QTableWidgetItem(str(income.id))
             self.table.setItem(row, 0, id_item)
             
-            # Name
             name_item = QTableWidgetItem(income.name)
             self.table.setItem(row, 1, name_item)
             
-            # Category
             category_text = self._get_category_text(income.category)
             category_item = QTableWidgetItem(category_text)
             self.table.setItem(row, 2, category_item)
             
-            # Amount
             symbol = CURRENCIES[income.currency].symbol
             amount_text = f"{symbol}{income.amount:,.2f}"
             amount_item = QTableWidgetItem(amount_text)
             amount_item.setForeground(QColor(COLORS.SUCCESS))
             self.table.setItem(row, 3, amount_item)
             
-            # Expected day
             day_item = QTableWidgetItem(str(income.expected_day))
             day_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             self.table.setItem(row, 4, day_item)
             
-            # Average delay
             avg_delay = self._repo.get_average_delay(income.id)
             if avg_delay < 0:
                 delay_text = f"-{abs(avg_delay):.1f}"

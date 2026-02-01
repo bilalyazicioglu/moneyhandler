@@ -54,7 +54,6 @@ class PlanningContainerView(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
         
-        # Inner tab widget
         self.inner_tabs = QTabWidget()
         self.inner_tabs.setStyleSheet(f"""
             QTabWidget::pane {{
@@ -85,11 +84,9 @@ class PlanningContainerView(QWidget):
             }}
         """)
         
-        # Planned Items tab
         self.planned_items_view = PlannedItemsView(self.controller)
         self.inner_tabs.addTab(self.planned_items_view, t("planned_items_tab"))
         
-        # Regular Income tab
         self.regular_income_view = RegularIncomeView(self.controller)
         self.inner_tabs.addTab(self.regular_income_view, t("regular_income_tab"))
         

@@ -12,7 +12,6 @@ from typing import List, Optional
 from data.database import get_database
 
 
-# Düzenli gelir kategorileri
 class IncomeCategory:
     """Düzenli gelir kategori sabitleri."""
     SALARY = "salary"
