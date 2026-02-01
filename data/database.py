@@ -115,6 +115,39 @@ class DatabaseManager:
             )
         """)
         
+        # Düzenli gelir tanımları tablosu
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS regular_incomes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                account_id INTEGER NOT NULL,
+                name TEXT NOT NULL,
+                category TEXT NOT NULL,
+                amount REAL NOT NULL,
+                currency TEXT NOT NULL DEFAULT 'TRY',
+                expected_day INTEGER NOT NULL,
+                description TEXT,
+                is_active INTEGER DEFAULT 1,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
+            )
+        """)
+        
+        # Ödeme geçmişi tablosu
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS income_payments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                regular_income_id INTEGER NOT NULL,
+                expected_date DATE NOT NULL,
+                actual_date DATE NOT NULL,
+                amount REAL NOT NULL,
+                currency TEXT NOT NULL DEFAULT 'TRY',
+                delay_days INTEGER NOT NULL,
+                notes TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (regular_income_id) REFERENCES regular_incomes(id) ON DELETE CASCADE
+            )
+        """)
+        
         self._connection.commit()
     
     @property

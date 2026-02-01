@@ -30,7 +30,7 @@ from config import (
 from views.dashboard_view import DashboardView
 from views.accounts_view import AccountsView
 from views.transactions_view import TransactionsView
-from views.planned_items_view import PlannedItemsView
+from views.planning_container_view import PlanningContainerView
 from views.weekly_spending_view import WeeklySpendingView
 from views.settings_view import SettingsView
 
@@ -132,8 +132,8 @@ class MainWindow(QMainWindow):
         self.transactions_view = TransactionsView(self.controller)
         self.tab_widget.addTab(self.transactions_view, t("tab_transactions"))
         
-        self.planned_items_view = PlannedItemsView(self.controller)
-        self.tab_widget.addTab(self.planned_items_view, t("tab_planned"))
+        self.planning_view = PlanningContainerView(self.controller)
+        self.tab_widget.addTab(self.planning_view, t("tab_planned"))
         
         self.weekly_spending_view = WeeklySpendingView(self.controller)
         self.tab_widget.addTab(self.weekly_spending_view, t("tab_weekly"))
@@ -155,8 +155,9 @@ class MainWindow(QMainWindow):
         
         self.transactions_view.transaction_changed.connect(self._on_data_changed)
         
-        self.planned_items_view.planned_item_changed.connect(self._on_data_changed)
-        self.planned_items_view.item_realized.connect(self._on_data_changed)
+        self.planning_view.planned_item_changed.connect(self._on_data_changed)
+        self.planning_view.item_realized.connect(self._on_data_changed)
+        self.planning_view.data_changed.connect(self._on_data_changed)
     
     def _on_tab_changed(self, index: int) -> None:
         """
@@ -179,7 +180,7 @@ class MainWindow(QMainWindow):
         self.dashboard_view.refresh()
         self.accounts_view.refresh()
         self.transactions_view.refresh()
-        self.planned_items_view.refresh()
+        self.planning_view.refresh()
         self.weekly_spending_view.refresh()
     
     def _update_status_bar(self) -> None:
