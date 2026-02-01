@@ -1,8 +1,8 @@
 """
-Düzenli Gelir View Modülü
+Düzenli Gider View Modülü
 
-Düzenli gelir yönetimi ekranı widget'ı.
-Maaş, burs, harçlık gibi aylık gelirlerin takibi için kullanılır.
+Düzenli gider yönetimi ekranı widget'ı.
+Kira, fatura, abonelik gibi aylık giderlerin takibi için kullanılır.
 """
 
 from datetime import date
@@ -20,47 +20,38 @@ from PyQt6.QtWidgets import (
     QHeaderView,
     QMessageBox,
     QSplitter,
-    QFrame,
-    QScrollArea
+    QFrame
 )
 from PyQt6.QtGui import QColor
 
 from config import COLORS, CURRENCIES, t
-from models.regular_income import RegularIncome, IncomePayment, RegularIncomeRepository
-from views.forms import RegularIncomeDialog, RecordPaymentDialog
+from models.regular_expense import RegularExpense, ExpensePayment, RegularExpenseRepository
+from views.forms import RegularExpenseDialog, RecordExpensePaymentDialog
 
 if TYPE_CHECKING:
     from controllers.main_controller import MainController
 
 
-class RegularIncomeView(QWidget):
+class RegularExpenseView(QWidget):
     """
-    Düzenli gelir yönetimi ekranı widget'ı.
+    Düzenli gider yönetimi ekranı widget'ı.
     
     Signals:
-        income_changed: Düzenli gelir değiştiğinde
+        expense_changed: Düzenli gider değiştiğinde
         payment_recorded: Ödeme kaydedildiğinde
     """
     
-    income_changed = pyqtSignal()
+    expense_changed = pyqtSignal()
     payment_recorded = pyqtSignal()
     
     def __init__(self, controller: 'MainController', parent=None) -> None:
-        """
-        RegularIncomeView başlatıcısı.
-        
-        Args:
-            controller: Ana controller referansı
-            parent: Üst widget
-        """
         super().__init__(parent)
         self.controller = controller
-        self._selected_income: Optional[RegularIncome] = None
-        self._repo = RegularIncomeRepository()
+        self._selected_expense: Optional[RegularExpense] = None
+        self._repo = RegularExpenseRepository()
         self._setup_ui()
     
     def _setup_ui(self) -> None:
-        """UI bileşenlerini oluşturur."""
         layout = QVBoxLayout(self)
         layout.setSpacing(20)
         layout.setContentsMargins(32, 32, 32, 32)
@@ -70,7 +61,7 @@ class RegularIncomeView(QWidget):
         title_layout = QVBoxLayout()
         title_layout.setSpacing(4)
         
-        title = QLabel(t("regular_income_tab"))
+        title = QLabel(t("regular_expense_tab"))
         title.setStyleSheet(f"""
             font-size: 28px;
             font-weight: 700;
@@ -79,14 +70,14 @@ class RegularIncomeView(QWidget):
         """)
         title_layout.addWidget(title)
         
-        subtitle = QLabel(t("this_month_expected"))
+        subtitle = QLabel(t("pending_expenses"))
         subtitle.setStyleSheet(f"color: {COLORS.TEXT_SECONDARY}; font-size: 14px;")
         title_layout.addWidget(subtitle)
         
         header_layout.addLayout(title_layout)
         header_layout.addStretch()
         
-        self.add_btn = QPushButton(t("new_regular_income"))
+        self.add_btn = QPushButton(t("new_regular_expense"))
         self.add_btn.setStyleSheet(f"""
             QPushButton {{
                 background-color: {COLORS.SUCCESS};
@@ -97,7 +88,7 @@ class RegularIncomeView(QWidget):
                 background-color: {COLORS.SUCCESS_LIGHT};
             }}
         """)
-        self.add_btn.clicked.connect(self._on_add_income)
+        self.add_btn.clicked.connect(self._on_add_expense)
         header_layout.addWidget(self.add_btn)
         
         layout.addLayout(header_layout)
@@ -108,7 +99,7 @@ class RegularIncomeView(QWidget):
         self.table = QTableWidget()
         self.table.setColumnCount(6)
         self.table.setHorizontalHeaderLabels([
-            "ID", t("income_name"), t("category"), t("amount"), t("table_expected_day"), t("table_avg_delay")
+            "ID", t("expense_name"), t("category"), t("amount"), t("table_expected_day"), t("table_avg_delay")
         ])
         
         header = self.table.horizontalHeader()
@@ -142,7 +133,6 @@ class RegularIncomeView(QWidget):
         layout.addWidget(splitter)
     
     def _create_detail_panel(self) -> QFrame:
-        """Detay panelini oluşturur."""
         panel = QFrame()
         panel.setStyleSheet(f"""
             QFrame {{
@@ -156,7 +146,7 @@ class RegularIncomeView(QWidget):
         layout.setSpacing(16)
         layout.setContentsMargins(20, 20, 20, 20)
         
-        self.detail_title = QLabel(t("regular_income_details"))
+        self.detail_title = QLabel(t("regular_expense_details"))
         self.detail_title.setStyleSheet(f"""
             font-size: 18px;
             font-weight: 600;
@@ -226,7 +216,7 @@ class RegularIncomeView(QWidget):
         
         btn_layout = QHBoxLayout()
         
-        self.record_btn = QPushButton(t("record_payment"))
+        self.record_btn = QPushButton(t("record_expense"))
         self.record_btn.setStyleSheet(f"""
             QPushButton {{
                 background-color: {COLORS.SUCCESS};
@@ -249,7 +239,7 @@ class RegularIncomeView(QWidget):
                 background-color: {COLORS.PRIMARY_HOVER};
             }}
         """)
-        self.edit_btn.clicked.connect(self._on_edit_income)
+        self.edit_btn.clicked.connect(self._on_edit_expense)
         btn_layout.addWidget(self.edit_btn)
         
         self.delete_btn = QPushButton(t("delete"))
@@ -262,7 +252,7 @@ class RegularIncomeView(QWidget):
                 background-color: {COLORS.DANGER_LIGHT};
             }}
         """)
-        self.delete_btn.clicked.connect(self._on_delete_income)
+        self.delete_btn.clicked.connect(self._on_delete_expense)
         btn_layout.addWidget(self.delete_btn)
         
         layout.addLayout(btn_layout)
@@ -272,7 +262,6 @@ class RegularIncomeView(QWidget):
         return panel
     
     def _create_stat_card(self, label: str, value: str) -> QFrame:
-        """Mini stat kartı oluşturur."""
         card = QFrame()
         card.setStyleSheet(f"""
             QFrame {{
@@ -308,13 +297,12 @@ class RegularIncomeView(QWidget):
         return card
     
     def _set_detail_enabled(self, enabled: bool) -> None:
-        """Detay panelini etkinleştirir/devre dışı bırakır."""
         self.record_btn.setEnabled(enabled)
         self.edit_btn.setEnabled(enabled)
         self.delete_btn.setEnabled(enabled)
         
         if not enabled:
-            self.detail_title.setText(t("regular_income_details"))
+            self.detail_title.setText(t("regular_expense_details"))
             self.stat_amount.findChild(QLabel, "value").setText("₺0")
             self.stat_day.findChild(QLabel, "value").setText("-")
             self.stat_delay.findChild(QLabel, "value").setText("-")
@@ -323,33 +311,31 @@ class RegularIncomeView(QWidget):
             self.no_payments_label.show()
     
     def _on_selection_changed(self) -> None:
-        """Tablo seçimi değiştiğinde çağrılır."""
         selected_rows = self.table.selectionModel().selectedRows()
         if not selected_rows:
-            self._selected_income = None
+            self._selected_expense = None
             self._set_detail_enabled(False)
             return
         
         row = selected_rows[0].row()
-        income_id = int(self.table.item(row, 0).text())
+        expense_id = int(self.table.item(row, 0).text())
         
-        self._selected_income = self._repo.get_by_id(income_id)
+        self._selected_expense = self._repo.get_by_id(expense_id)
         
-        if self._selected_income:
-            self._load_detail(self._selected_income)
+        if self._selected_expense:
+            self._load_detail(self._selected_expense)
             self._set_detail_enabled(True)
     
-    def _load_detail(self, income: RegularIncome) -> None:
-        """Düzenli gelir detaylarını panele yükler."""
-        self.detail_title.setText(income.name)
+    def _load_detail(self, expense: RegularExpense) -> None:
+        self.detail_title.setText(expense.name)
         
-        symbol = CURRENCIES[income.currency].symbol
-        self.stat_amount.findChild(QLabel, "value").setText(f"{symbol}{income.amount:,.2f}")
-        self.stat_day.findChild(QLabel, "value").setText(str(income.expected_day))
+        symbol = CURRENCIES[expense.currency].symbol
+        self.stat_amount.findChild(QLabel, "value").setText(f"{symbol}{expense.amount:,.2f}")
+        self.stat_day.findChild(QLabel, "value").setText(str(expense.expected_day))
         
-        avg_delay = self._repo.get_average_delay(income.id)
+        avg_delay = self._repo.get_average_delay(expense.id)
         if avg_delay < 0:
-            delay_text = f"{abs(avg_delay):.1f} {t('days_early')}"
+            delay_text = f"-{abs(avg_delay):.1f}"
             delay_color = COLORS.SUCCESS
         elif avg_delay == 0:
             delay_text = t("on_time")
@@ -367,7 +353,7 @@ class RegularIncomeView(QWidget):
             border: none;
         """)
         
-        payments = self._repo.get_payments(income.id, limit=6)
+        payments = self._repo.get_payments(expense.id, limit=6)
         
         if payments:
             self.payment_table.show()
@@ -406,44 +392,42 @@ class RegularIncomeView(QWidget):
             self.no_payments_label.show()
     
     def _get_category_text(self, category: str) -> str:
-        """Kategori kodunu görüntüleme metnine çevirir."""
         mapping = {
-            "salary": t("category_salary"),
-            "scholarship": t("category_scholarship"),
-            "allowance": t("category_allowance"),
-            "rental": t("category_rental"),
-            "other": t("category_other_income"),
+            "rent": t("category_rent"),
+            "utilities": t("category_utilities"),
+            "subscription": t("category_subscription"),
+            "insurance": t("category_insurance"),
+            "other": t("category_other_expense"),
         }
         return mapping.get(category, category)
     
     def refresh(self) -> None:
-        """Düzenli gelir listesini yeniler."""
-        incomes = self._repo.get_all(active_only=True)
+        expenses = self._repo.get_all(active_only=True)
         
-        self.table.setRowCount(len(incomes))
+        self.table.setRowCount(len(expenses))
         
-        for row, income in enumerate(incomes):
-            id_item = QTableWidgetItem(str(income.id))
+        for row, expense in enumerate(expenses):
+            id_item = QTableWidgetItem(str(expense.id))
             self.table.setItem(row, 0, id_item)
             
-            name_item = QTableWidgetItem(income.name)
+            name_item = QTableWidgetItem(expense.name)
             self.table.setItem(row, 1, name_item)
             
-            category_text = self._get_category_text(income.category)
+            category_text = self._get_category_text(expense.category)
             category_item = QTableWidgetItem(category_text)
             self.table.setItem(row, 2, category_item)
             
-            symbol = CURRENCIES[income.currency].symbol
-            amount_text = f"{symbol}{income.amount:,.2f}"
+            symbol = CURRENCIES[expense.currency].symbol
+            amount_text = f"{symbol}{expense.amount:,.2f}"
             amount_item = QTableWidgetItem(amount_text)
             amount_item.setForeground(QColor(COLORS.SUCCESS))
             self.table.setItem(row, 3, amount_item)
             
-            day_item = QTableWidgetItem(str(income.expected_day))
+            day_item = QTableWidgetItem(str(expense.expected_day))
             day_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             self.table.setItem(row, 4, day_item)
             
-            avg_delay = self._repo.get_average_delay(income.id)
+            avg_delay = self._repo.get_average_delay(expense.id)
             if avg_delay < 0:
                 delay_text = f"-{abs(avg_delay):.1f}"
                 delay_color = COLORS.SUCCESS
@@ -459,8 +443,7 @@ class RegularIncomeView(QWidget):
             delay_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             self.table.setItem(row, 5, delay_item)
     
-    def _on_add_income(self) -> None:
-        """Yeni düzenli gelir ekleme."""
+    def _on_add_expense(self) -> None:
         accounts = self.controller.get_all_accounts()
         if not accounts:
             QMessageBox.warning(
@@ -470,60 +453,57 @@ class RegularIncomeView(QWidget):
             )
             return
         
-        dialog = RegularIncomeDialog(self, accounts=accounts)
+        dialog = RegularExpenseDialog(self, accounts=accounts)
         if dialog.exec():
-            income = dialog.get_data()
-            self._repo.create(income)
+            expense = dialog.get_data()
+            self._repo.create(expense)
             self.refresh()
-            self.income_changed.emit()
+            self.expense_changed.emit()
     
-    def _on_edit_income(self) -> None:
-        """Seçili düzenli geliri düzenler."""
-        if not self._selected_income:
+    def _on_edit_expense(self) -> None:
+        if not self._selected_expense:
             return
         
         accounts = self.controller.get_all_accounts()
-        dialog = RegularIncomeDialog(self, self._selected_income, accounts)
+        dialog = RegularExpenseDialog(self, self._selected_expense, accounts)
         if dialog.exec():
             updated = dialog.get_data()
             self._repo.update(updated)
             self.refresh()
-            self.income_changed.emit()
+            self.expense_changed.emit()
     
-    def _on_delete_income(self) -> None:
-        """Seçili düzenli geliri siler."""
-        if not self._selected_income:
+    def _on_delete_expense(self) -> None:
+        if not self._selected_expense:
             return
         
         reply = QMessageBox.question(
             self,
             t("warning"),
-            t("msg_delete_regular_income"),
+            t("msg_delete_regular_expense"),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No
         )
         
         if reply == QMessageBox.StandardButton.Yes:
-            self._repo.delete(self._selected_income.id)
-            self._selected_income = None
+            self._repo.delete(self._selected_expense.id)
+            self._selected_expense = None
             self._set_detail_enabled(False)
             self.refresh()
-            self.income_changed.emit()
+            self.expense_changed.emit()
     
     def _on_record_payment(self) -> None:
-        """Ödeme kaydetme dialog'unu açar."""
-        if not self._selected_income:
+        if not self._selected_expense:
             return
         
-        dialog = RecordPaymentDialog(self, self._selected_income)
+        dialog = RecordExpensePaymentDialog(self, self._selected_expense)
         if dialog.exec():
             payment = dialog.get_data()
             self._repo.record_payment(payment)
-            self._load_detail(self._selected_income)
+            self._load_detail(self._selected_expense)
             
             QMessageBox.information(
                 self,
                 t("success"),
-                t("payment_recorded")
+                t("expense_payment_recorded")
             )
             self.payment_recorded.emit()

@@ -15,7 +15,9 @@ from PyQt6.QtWidgets import (
 
 from config import COLORS, t
 from views.planned_items_view import PlannedItemsView
+
 from views.regular_income_view import RegularIncomeView
+from views.regular_expense_view import RegularExpenseView
 
 if TYPE_CHECKING:
     from controllers.main_controller import MainController
@@ -27,7 +29,9 @@ class PlanningContainerView(QWidget):
     
     Sekmeler:
     - Planlanan İşlemler (PlannedItemsView)
+
     - Düzenli Gelirler (RegularIncomeView)
+    - Düzenli Giderler (RegularExpenseView)
     
     Signals:
         data_changed: Herhangi bir veri değiştiğinde
@@ -90,6 +94,9 @@ class PlanningContainerView(QWidget):
         self.regular_income_view = RegularIncomeView(self.controller)
         self.inner_tabs.addTab(self.regular_income_view, t("regular_income_tab"))
         
+        self.regular_expense_view = RegularExpenseView(self.controller)
+        self.inner_tabs.addTab(self.regular_expense_view, t("regular_expense_tab"))
+        
         layout.addWidget(self.inner_tabs)
     
     def _connect_signals(self) -> None:
@@ -98,6 +105,8 @@ class PlanningContainerView(QWidget):
         self.planned_items_view.item_realized.connect(self._on_data_changed)
         self.regular_income_view.income_changed.connect(self._on_data_changed)
         self.regular_income_view.payment_recorded.connect(self._on_data_changed)
+        self.regular_expense_view.expense_changed.connect(self._on_data_changed)
+        self.regular_expense_view.payment_recorded.connect(self._on_data_changed)
     
     def _on_data_changed(self) -> None:
         """Veri değiştiğinde çağrılır."""
@@ -107,6 +116,7 @@ class PlanningContainerView(QWidget):
         """İç sekmeleri yeniler."""
         self.planned_items_view.refresh()
         self.regular_income_view.refresh()
+        self.regular_expense_view.refresh()
     
     @property
     def planned_item_changed(self):

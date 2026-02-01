@@ -1044,3 +1044,375 @@ class RecordPaymentDialog(QDialog):
             notes=self.notes_input.toPlainText().strip()
         )
 
+
+class RegularExpenseDialog(QDialog):
+    """
+    Düzenli gider ekleme/düzenleme formu.
+    """
+    
+    def __init__(
+        self,
+        parent=None,
+        regular_expense=None,
+        accounts: List[Account] = None
+    ) -> None:
+        super().__init__(parent)
+        self.regular_expense = regular_expense
+        self.accounts = accounts or []
+        self._setup_ui()
+        self._load_data()
+    
+    def _setup_ui(self) -> None:
+        self.setWindowTitle(
+            t("dialog_add_regular_expense") if self.regular_expense is None 
+            else t("dialog_edit_regular_expense")
+        )
+        self.setMinimumWidth(480)
+        self.setModal(True)
+        
+        layout = QVBoxLayout(self)
+        layout.setSpacing(20)
+        layout.setContentsMargins(24, 24, 24, 24)
+        
+        title = QLabel(
+            t("dialog_add_regular_expense") if self.regular_expense is None 
+            else t("dialog_edit_regular_expense")
+        )
+        title.setStyleSheet(f"""
+            font-size: 20px;
+            font-weight: 700;
+            color: {COLORS.TEXT_PRIMARY};
+        """)
+        layout.addWidget(title)
+        
+        line = QFrame()
+        line.setFrameShape(QFrame.Shape.HLine)
+        line.setStyleSheet(f"background-color: {COLORS.BORDER};")
+        line.setFixedHeight(1)
+        layout.addWidget(line)
+        
+        form_layout = QFormLayout()
+        form_layout.setSpacing(16)
+        form_layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
+        
+        self.name_input = QLineEdit()
+        self.name_input.setPlaceholderText(t("placeholder_expense_name"))
+        form_layout.addRow(t("expense_name"), self.name_input)
+        
+        self.category_combo = QComboBox()
+        self.category_combo.addItem(t("category_rent"), "rent")
+        self.category_combo.addItem(t("category_utilities"), "utilities")
+        self.category_combo.addItem(t("category_subscription"), "subscription")
+        self.category_combo.addItem(t("category_insurance"), "insurance")
+        self.category_combo.addItem(t("category_other_expense"), "other")
+        form_layout.addRow(t("category"), self.category_combo)
+        
+        self.account_combo = QComboBox()
+        for account in self.accounts:
+            symbol = CURRENCIES[account.currency].symbol
+            self.account_combo.addItem(
+                f"{account.name} ({symbol})",
+                account.id
+            )
+        self.account_combo.currentIndexChanged.connect(self._on_account_changed)
+        form_layout.addRow(t("account"), self.account_combo)
+        
+        self.amount_input = QDoubleSpinBox()
+        self.amount_input.setRange(0.01, 999999999)
+        self.amount_input.setDecimals(2)
+        self.amount_input.setSingleStep(100)
+        form_layout.addRow(t("amount"), self.amount_input)
+        
+        self.currency_combo = QComboBox()
+        for code, currency in CURRENCIES.items():
+            self.currency_combo.addItem(f"{currency.symbol} {currency.name}", code)
+        form_layout.addRow(t("currency"), self.currency_combo)
+        
+        from PyQt6.QtWidgets import QSpinBox
+        self.day_input = QSpinBox()
+        self.day_input.setRange(1, 31)
+        self.day_input.setValue(1)
+        form_layout.addRow(t("day_of_month"), self.day_input)
+        
+        self.description_input = QTextEdit()
+        self.description_input.setMaximumHeight(80)
+        self.description_input.setPlaceholderText(f"{t('description')} ({t('optional')})")
+        form_layout.addRow(t("description"), self.description_input)
+        
+        layout.addLayout(form_layout)
+        
+        layout.addStretch()
+        
+        button_layout = QHBoxLayout()
+        button_layout.addStretch()
+        
+        self.cancel_btn = QPushButton(t("cancel"))
+        self.cancel_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {COLORS.BG_ELEVATED};
+                border: 1px solid {COLORS.BORDER};
+                min-width: 100px;
+            }}
+            QPushButton:hover {{
+                background-color: {COLORS.BG_INPUT};
+            }}
+        """)
+        self.cancel_btn.clicked.connect(self.reject)
+        button_layout.addWidget(self.cancel_btn)
+        
+        self.save_btn = QPushButton(t("save"))
+        self.save_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {COLORS.PRIMARY};
+                min-width: 100px;
+            }}
+            QPushButton:hover {{
+                background-color: {COLORS.PRIMARY_HOVER};
+            }}
+        """)
+        self.save_btn.clicked.connect(self._on_save)
+        button_layout.addWidget(self.save_btn)
+        
+        layout.addLayout(button_layout)
+        
+        if self.regular_expense is None and len(self.accounts) > 0:
+            self._on_account_changed(0)
+    
+    def _on_account_changed(self, index: int) -> None:
+        if index < 0 or index >= len(self.accounts):
+            return
+        account = self.accounts[index]
+        currency_index = self.currency_combo.findData(account.currency)
+        if currency_index >= 0:
+            self.currency_combo.setCurrentIndex(currency_index)
+    
+    def _load_data(self) -> None:
+        if self.regular_expense is None:
+            return
+        
+        self.name_input.setText(self.regular_expense.name)
+        
+        index = self.category_combo.findData(self.regular_expense.category)
+        if index >= 0:
+            self.category_combo.setCurrentIndex(index)
+        
+        index = self.account_combo.findData(self.regular_expense.account_id)
+        if index >= 0:
+            self.account_combo.setCurrentIndex(index)
+        
+        self.amount_input.setValue(self.regular_expense.amount)
+        
+        index = self.currency_combo.findData(self.regular_expense.currency)
+        if index >= 0:
+            self.currency_combo.setCurrentIndex(index)
+        
+        self.day_input.setValue(self.regular_expense.expected_day)
+        self.description_input.setPlainText(self.regular_expense.description)
+    
+    def _on_save(self) -> None:
+        if not self.name_input.text().strip():
+            QMessageBox.warning(self, t("warning"), t("msg_account_empty"))
+            return
+        
+        if self.account_combo.count() == 0:
+            QMessageBox.warning(self, t("warning"), t("msg_create_account_first"))
+            return
+        
+        if self.amount_input.value() <= 0:
+            QMessageBox.warning(self, t("warning"), t("msg_amount_positive"))
+            return
+        
+        self.accept()
+    
+    def get_data(self):
+        from models.regular_expense import RegularExpense
+        
+        return RegularExpense(
+            id=self.regular_expense.id if self.regular_expense else None,
+            account_id=self.account_combo.currentData(),
+            name=self.name_input.text().strip(),
+            category=self.category_combo.currentData(),
+            amount=self.amount_input.value(),
+            currency=self.currency_combo.currentData(),
+            expected_day=self.day_input.value(),
+            description=self.description_input.toPlainText().strip()
+        )
+
+
+class RecordExpensePaymentDialog(QDialog):
+    """
+    Düzenli gider ödeme kaydetme formu.
+    """
+    
+    def __init__(
+        self,
+        parent=None,
+        regular_expense=None
+    ) -> None:
+        super().__init__(parent)
+        self.regular_expense = regular_expense
+        self._setup_ui()
+        self._load_defaults()
+    
+    def _setup_ui(self) -> None:
+        self.setWindowTitle(t("dialog_record_expense_payment"))
+        self.setMinimumWidth(420)
+        self.setModal(True)
+        
+        layout = QVBoxLayout(self)
+        layout.setSpacing(20)
+        layout.setContentsMargins(24, 24, 24, 24)
+        
+        title = QLabel(t("dialog_record_expense_payment"))
+        title.setStyleSheet(f"""
+            font-size: 20px;
+            font-weight: 700;
+            color: {COLORS.TEXT_PRIMARY};
+        """)
+        layout.addWidget(title)
+        
+        if self.regular_expense:
+            info_label = QLabel(f"{self.regular_expense.name}")
+            info_label.setStyleSheet(f"""
+                color: {COLORS.TEXT_SECONDARY};
+                font-size: 14px;
+            """)
+            layout.addWidget(info_label)
+        
+        line = QFrame()
+        line.setFrameShape(QFrame.Shape.HLine)
+        line.setStyleSheet(f"background-color: {COLORS.BORDER};")
+        line.setFixedHeight(1)
+        layout.addWidget(line)
+        
+        form_layout = QFormLayout()
+        form_layout.setSpacing(16)
+        form_layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
+        
+        self.expected_date_input = QDateEdit()
+        self.expected_date_input.setCalendarPopup(True)
+        self.expected_date_input.setDate(QDate.currentDate())
+        form_layout.addRow(t("expected_day"), self.expected_date_input)
+        
+        self.actual_date_input = QDateEdit()
+        self.actual_date_input.setCalendarPopup(True)
+        self.actual_date_input.setDate(QDate.currentDate())
+        form_layout.addRow(t("actual_date"), self.actual_date_input)
+        
+        self.amount_input = QDoubleSpinBox()
+        self.amount_input.setRange(0.01, 999999999)
+        self.amount_input.setDecimals(2)
+        self.amount_input.setSingleStep(100)
+        form_layout.addRow(t("amount"), self.amount_input)
+        
+        self.notes_input = QTextEdit()
+        self.notes_input.setMaximumHeight(60)
+        self.notes_input.setPlaceholderText(f"{t('description')} ({t('optional')})")
+        form_layout.addRow(t("description"), self.notes_input)
+        
+        layout.addLayout(form_layout)
+        
+        self.delay_label = QLabel()
+        self.delay_label.setStyleSheet(f"color: {COLORS.TEXT_SECONDARY}; font-size: 13px;")
+        layout.addWidget(self.delay_label)
+        
+        self.expected_date_input.dateChanged.connect(self._update_delay_display)
+        self.actual_date_input.dateChanged.connect(self._update_delay_display)
+        
+        layout.addStretch()
+        
+        button_layout = QHBoxLayout()
+        button_layout.addStretch()
+        
+        self.cancel_btn = QPushButton(t("cancel"))
+        self.cancel_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {COLORS.BG_ELEVATED};
+                border: 1px solid {COLORS.BORDER};
+                min-width: 100px;
+            }}
+            QPushButton:hover {{
+                background-color: {COLORS.BG_INPUT};
+            }}
+        """)
+        self.cancel_btn.clicked.connect(self.reject)
+        button_layout.addWidget(self.cancel_btn)
+        
+        self.save_btn = QPushButton(t("record_expense"))
+        self.save_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {COLORS.SUCCESS};
+                min-width: 100px;
+            }}
+            QPushButton:hover {{
+                background-color: {COLORS.SUCCESS_LIGHT};
+            }}
+        """)
+        self.save_btn.clicked.connect(self._on_save)
+        button_layout.addWidget(self.save_btn)
+        
+        layout.addLayout(button_layout)
+    
+    def _load_defaults(self) -> None:
+        if self.regular_expense is None:
+            return
+        
+        today = date.today()
+        expected = self.regular_expense.get_expected_date_for_month(today.year, today.month)
+        
+        self.expected_date_input.setDate(QDate(expected.year, expected.month, expected.day))
+        self.actual_date_input.setDate(QDate.currentDate())
+        self.amount_input.setValue(self.regular_expense.amount)
+        
+        self._update_delay_display()
+    
+    def _update_delay_display(self) -> None:
+        expected = self.expected_date_input.date()
+        actual = self.actual_date_input.date()
+        
+        expected_date = date(expected.year(), expected.month(), expected.day())
+        actual_date = date(actual.year(), actual.month(), actual.day())
+        
+        delay = (actual_date - expected_date).days
+        
+        if delay < 0:
+            text = f"{abs(delay)} {t('days_early')}"
+            color = COLORS.SUCCESS
+        elif delay == 0:
+            text = t('on_time')
+            color = COLORS.INFO
+        elif delay <= 3:
+            text = f"{delay} {t('days_late')}"
+            color = COLORS.WARNING
+        else:
+            text = f"{delay} {t('days_late')}"
+            color = COLORS.DANGER
+        
+        self.delay_label.setText(text)
+        self.delay_label.setStyleSheet(f"color: {color}; font-size: 14px; font-weight: 600;")
+    
+    def _on_save(self) -> None:
+        if self.amount_input.value() <= 0:
+            QMessageBox.warning(self, t("warning"), t("msg_amount_positive"))
+            return
+        
+        self.accept()
+    
+    def get_data(self):
+        from models.regular_expense import ExpensePayment
+        
+        expected = self.expected_date_input.date()
+        actual = self.actual_date_input.date()
+        
+        expected_date = date(expected.year(), expected.month(), expected.day())
+        actual_date = date(actual.year(), actual.month(), actual.day())
+        
+        return ExpensePayment(
+            regular_expense_id=self.regular_expense.id if self.regular_expense else None,
+            expected_date=expected_date,
+            actual_date=actual_date,
+            amount=self.amount_input.value(),
+            currency=self.regular_expense.currency if self.regular_expense else "TRY",
+            notes=self.notes_input.toPlainText().strip()
+        )
+

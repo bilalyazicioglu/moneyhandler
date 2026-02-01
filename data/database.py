@@ -148,6 +148,37 @@ class DatabaseManager:
             )
         """)
         
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS regular_expenses (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                account_id INTEGER NOT NULL,
+                name TEXT NOT NULL,
+                category TEXT NOT NULL DEFAULT 'other',
+                amount REAL NOT NULL,
+                currency TEXT NOT NULL DEFAULT 'TRY',
+                expected_day INTEGER NOT NULL CHECK(expected_day >= 1 AND expected_day <= 31),
+                description TEXT,
+                is_active INTEGER DEFAULT 1,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
+            )
+        """)
+        
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS expense_payments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                regular_expense_id INTEGER NOT NULL,
+                expected_date DATE NOT NULL,
+                actual_date DATE NOT NULL,
+                amount REAL NOT NULL,
+                currency TEXT NOT NULL DEFAULT 'TRY',
+                delay_days INTEGER NOT NULL,
+                notes TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (regular_expense_id) REFERENCES regular_expenses(id) ON DELETE CASCADE
+            )
+        """)
+        
         self._connection.commit()
     
     @property
